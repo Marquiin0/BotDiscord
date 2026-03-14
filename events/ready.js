@@ -179,10 +179,10 @@ module.exports = {
       await notifyExpiredIdentifications(client)
     }, 21600000)
 
-    // Relatório identificação a cada 1h
+    // Relatório identificação a cada 2h
     setInterval(async () => {
       await reportIdentificationStatus(client)
-    }, 3600000)
+    }, 7200000)
 
     // Advertências expiradas (check frequente)
     setInterval(() => {

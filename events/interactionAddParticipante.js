@@ -39,7 +39,8 @@ module.exports = {
           new ActionRowBuilder().addComponents(
             new TextInputBuilder()
               .setCustomId('participant_id')
-              .setLabel('ID do Participante (FiveM)')
+              .setLabel('ID do Participante (Discord)')
+              .setPlaceholder('Ex: 123456789012345678')
               .setStyle(TextInputStyle.Short)
               .setRequired(true)
           )

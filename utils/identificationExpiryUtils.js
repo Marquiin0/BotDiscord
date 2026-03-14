@@ -38,6 +38,7 @@ const GUILD_ID = config.guilds.main
 const TICKET_CHANNEL_URL =
   `https://discord.com/channels/${config.guilds.main}/${config.channels.tickets}`
 const STAFF_LOG_CHANNEL_ID = config.channels.identificacaoLog
+const RESUMO_CHANNEL_ID = config.channels.identificacaoResumo
 const COPY_BTN_PREFIX = 'copy_mentions_'
 
 // arquivo que guarda os IDs das mensagens
@@ -56,10 +57,10 @@ function saveStore(obj) {
   fs.writeFileSync(STORE_PATH, JSON.stringify(obj, null, 2))
 }
 
-// helper SQLite (<= dataRegistro)
+// helper PostgreSQL (<= dataRegistro)
 const lteDataRegistro = dateObj =>
   SequelizeLib.literal(
-    `strftime('%s', dataRegistro) <= strftime('%s', '${dateObj.toISOString()}')`,
+    `"dataRegistro" <= '${dateObj.toISOString()}'`,
   )
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -201,17 +202,29 @@ async function alertStaffExpiredIdentifications(client) {
 // 3) RELATÓRIO GERAL
 // ────────────────────────────────────────────────────────────────────────────
 async function reportIdentificationStatus(client) {
-  if (!MemberModel) return
+  if (!MemberModel) {
+    console.error('[ID‑EXP] MemberModel não encontrado, abortando relatório.')
+    return
+  }
 
-  const guild = client.guilds.cache.get(GUILD_ID)
-  const channel = guild?.channels.cache.get(STAFF_LOG_CHANNEL_ID)
-  if (!guild || !channel) return
+  const guild = client.guilds.cache.get(GUILD_ID) || await client.guilds.fetch(GUILD_ID).catch(() => null)
+  if (!guild) {
+    console.error('[ID‑EXP] Guild não encontrada:', GUILD_ID)
+    return
+  }
+
+  const channel = guild.channels.cache.get(RESUMO_CHANNEL_ID) || await guild.channels.fetch(RESUMO_CHANNEL_ID).catch(() => null)
+  if (!channel) {
+    console.error('[ID‑EXP] Canal de resumo não encontrado:', RESUMO_CHANNEL_ID)
+    return
+  }
 
   /* ---------- coleta dados (igual antes) -------------------------------- */
   let membersDb, identificados
   try {
     membersDb = await MemberModel.findAll({ attributes: ['memberId'] })
     identificados = await Identificacao.findAll({
+      where: { status: 'ativo' },
       attributes: ['userId'],
       group: ['userId'],
     })
@@ -224,48 +237,16 @@ async function reportIdentificationStatus(client) {
   const idsIdentificados = identificados.map(i => i.userId)
   const semIdentificacao = todosIDs.filter(id => !idsIdentificados.includes(id))
 
-  const limite10 = moment()
-    .tz('America/Sao_Paulo')
-    .subtract(10, 'days')
-    .toDate()
-  let exp10
-  try {
-    exp10 = await Identificacao.findAll({
-      where: { status: 'inativo', [Op.and]: lteDataRegistro(limite10) },
-    })
-  } catch (err) {
-    console.error('[ID‑EXP] Erro ao buscar expirados 10+ dias:', err)
-    return
-  }
-
-  /* ---------- monta embeds + rows --------------------------------------- */
+  /* ---------- monta embed + row ----------------------------------------- */
   const semDesc = semIdentificacao.length
     ? semIdentificacao.map(id => `<@${id}>`).join('\n')
     : 'Todos os oficiais possuem identificação.'
-
-  const expDesc = exp10.length
-    ? exp10
-        .map(
-          r =>
-            `<@${r.userId}> • criada <t:${Math.floor(
-              r.dataRegistro / 1000,
-            )}:R>`,
-        )
-        .join('\n')
-    : 'Nenhuma identificação expirada há 10+ dias.'
 
   const embedSem = new EmbedBuilder()
     .setColor(0xffa500)
     .setTitle('📋 Oficiais sem Identificação')
     .setDescription(semDesc)
     .setFooter({ text: `Total: ${semIdentificacao.length}` })
-    .setTimestamp()
-
-  const embedExp = new EmbedBuilder()
-    .setColor(0xff0000)
-    .setTitle('⏰ Identificações expiradas (10+ dias)')
-    .setDescription(expDesc)
-    .setFooter({ text: `Total: ${exp10.length}` })
     .setTimestamp()
 
   const rowSem = new ActionRowBuilder().addComponents(
@@ -275,37 +256,9 @@ async function reportIdentificationStatus(client) {
       .setStyle(ButtonStyle.Secondary)
       .setEmoji('📋'),
   )
-  const rowExp = new ActionRowBuilder().addComponents(
-    new ButtonBuilder()
-      .setCustomId(`${COPY_BTN_PREFIX}exp`)
-      .setLabel('Copiar menções')
-      .setStyle(ButtonStyle.Secondary)
-      .setEmoji('📋'),
-  )
 
-  /* ---------- cria OU edita mensagens ----------------------------------- */
-  const store = loadStore()
-
-  // helper interno para criar / editar
-  async function upsertMessage(key, embed, row) {
-    const msgId = store[key]
-    let message
-    if (msgId) {
-      // tenta editar
-      message = await channel.messages.fetch(msgId).catch(() => null)
-      if (message) {
-        await message.edit({ embeds: [embed], components: [row] })
-        return
-      }
-    }
-    // se não existia (ou foi deletada) → envia de novo
-    message = await channel.send({ embeds: [embed], components: [row] })
-    store[key] = message.id
-    saveStore(store)
-  }
-
-  await upsertMessage('sem', embedSem, rowSem)
-  await upsertMessage('exp', embedExp, rowExp)
+  /* ---------- envia nova mensagem a cada execução ------------------------ */
+  await channel.send({ embeds: [embedSem], components: [rowSem] })
 }
 
 // ────────────────────────────────────────────────────────────────────────────

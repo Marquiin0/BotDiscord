@@ -1,9 +1,23 @@
 const { Sequelize, DataTypes } = require('sequelize');
-const sequelize = new Sequelize({
-    dialect: 'sqlite',
-    storage: 'database.sqlite',
-    logging: false,
-});
+require('dotenv').config();
+
+const sequelize = new Sequelize(
+    process.env.DB_NAME,
+    process.env.DB_USER,
+    process.env.DB_PASSWORD,
+    {
+        host: process.env.DB_HOST,
+        port: process.env.DB_PORT,
+        dialect: 'postgres',
+        dialectOptions: {
+            ssl: {
+                require: true,
+                rejectUnauthorized: false,
+            },
+        },
+        logging: false,
+    }
+);
 
 
 
@@ -739,6 +753,34 @@ const VictoryDefeat = sequelize.define('VictoryDefeat', {
     timestamps: true,
 });
 
+const ArsenalProcessedLog = sequelize.define('ArsenalProcessedLog', {
+    messageId: {
+        type: DataTypes.STRING,
+        primaryKey: true,
+        allowNull: false,
+    },
+}, {
+    tableName: 'arsenal_processed_logs',
+    timestamps: true,
+});
+
+const ArsenalIsento = sequelize.define('ArsenalIsento', {
+    userId: {
+        type: DataTypes.STRING,
+        primaryKey: true,
+        allowNull: false,
+    },
+    addedBy: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
+}, {
+    tableName: 'arsenal_isentos',
+    timestamps: true,
+});
+
+ArsenalProcessedLog.sync();
+ArsenalIsento.sync();
 QuizResult.sync();
 SetagemConfig.sync();
 VictoryDefeat.sync();
@@ -804,6 +846,8 @@ module.exports = {
     QuizResult,
     SetagemConfig,
     VictoryDefeat,
+    ArsenalProcessedLog,
+    ArsenalIsento,
 };
 
 

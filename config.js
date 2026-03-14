@@ -31,10 +31,13 @@ module.exports = {
         tickets: '1477408728884969655',              // Embed tickets / recurso corregedoria
         promocaoLog: '1477408729103335438',          // Log promoções/rebaixamentos
         identificacaoLog: '1477408729103335444',     // Log identificação (fotos)
+        identificacaoResumo: '1477408728679714904', // Resumo: sem identificação + expiradas
         cursoComprovantes: '1482106954640920636',  // Revisão comprovantes de curso
         cursoAprovados: '1482106851871948821',     // Lista de aprovados do curso
         ranking: '1477408729313054776',              // Ranking de pontos
         bet: '1481838121992720457',                  // Canal de apostas
+        arsenalAlerta: '1477408728679714903',        // Alertas de infrações do arsenal
+        saidaAlerta: '1477408728679714904',          // Alertas de saída (saiu da org / saiu do servidor)
     },
 
     // ==================== CANAIS (Servidor de Logs) ====================
@@ -48,6 +51,7 @@ module.exports = {
         rebaixamento: '1477473908402946129', // Log rebaixamentos
         promocao: '1477473908402946129',    // Log promoções
         corregedoria: '1477473908587233434', // Log advertências/exonerações
+        cursoMAA: '1481839491030454424',       // Log resultados curso MAA
     },
 
     // ==================== CATEGORIAS ====================
@@ -219,6 +223,19 @@ module.exports = {
         color: '#1E90FF',
         footerText: 'Genesis Police',
         bannerUrl: 'https://cdn.discordapp.com/attachments/1477408728679714896/1481818996398620844/banner.png?ex=69b4b2fb&is=69b3617b&hm=dd813801249ac5e36b073e4a52e7154c30c543b92aabab9d4b2aba113b6a3ab3&',
+    },
+
+    // ==================== ARSENAL (itens proibidos por patente) ====================
+    arsenalProibido: {
+        '1TEN': ['silvertape', 'weapon_flare', 'weapon_militaryrifle'],
+        ASP:    ['silvertape', 'weapon_flare', 'weapon_militaryrifle'],
+        STEN:   ['silvertape', 'weapon_flare', 'weapon_militaryrifle'],
+        '1SGT': ['silvertape', 'weapon_pumpshotgun_mk2', 'weapon_flare', 'weapon_militaryrifle'],
+        '2SGT': ['silvertape', 'weapon_pumpshotgun_mk2', 'weapon_flare', 'weapon_militaryrifle'],
+        '3SGT': ['silvertape', 'weapon_smg_mk2', 'weapon_pumpshotgun_mk2', 'weapon_flare', 'weapon_militaryrifle'],
+        CB:     ['silvertape', 'weapon_revolver_mk2', 'weapon_smg_mk2', 'weapon_pumpshotgun_mk2', 'weapon_flare', 'weapon_militaryrifle'],
+        SD:     ['silvertape', 'weapon_pistol50', 'weapon_revolver_mk2', 'weapon_smg_mk2', 'weapon_pumpshotgun_mk2', 'weapon_flare', 'weapon_militaryrifle'],
+        EST:    ['silvertape', 'weapon_specialcarbine_mk2', 'weapon_pistol50', 'weapon_revolver_mk2', 'weapon_smg_mk2', 'weapon_pumpshotgun_mk2', 'weapon_flare', 'weapon_militaryrifle'],
     },
 
     // ==================== OWNER ====================

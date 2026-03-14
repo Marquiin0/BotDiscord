@@ -14,6 +14,16 @@ const maaQuestions = require('../utils/maaQuestions.json')
 // Armazena sessões ativas de quiz
 const activeSessions = new Map()
 
+// Fisher-Yates shuffle (embaralhamento correto e uniforme)
+function shuffle(array) {
+  const arr = [...array]
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]]
+  }
+  return arr
+}
+
 module.exports = {
   name: 'interactionCreate',
   async execute(interaction, client) {
@@ -102,8 +112,18 @@ async function handleStartQuiz(interaction, client) {
       ],
     })
 
-    // Embaralha as perguntas
-    const shuffledQuestions = [...maaQuestions].sort(() => Math.random() - 0.5)
+    // Embaralha as perguntas E as opções dentro de cada pergunta
+    const labels = ['A', 'B', 'C', 'D']
+    const shuffledQuestions = shuffle(maaQuestions).map(q => {
+      const correctText = q.options.find(o => o.label === q.answer).text
+      const shuffledOptions = shuffle(q.options)
+      let newAnswer = ''
+      const newOptions = shuffledOptions.map((opt, i) => {
+        if (opt.text === correctText) newAnswer = labels[i]
+        return { label: labels[i], text: opt.text }
+      })
+      return { ...q, options: newOptions, answer: newAnswer }
+    })
 
     // Cria sessão
     const session = {
@@ -207,7 +227,7 @@ async function handleQuizAnswer(interaction) {
   const session = activeSessions.get(sessionUserId)
   if (!session) {
     return interaction.reply({
-      content: '⚠️ Sessão não encontrada ou expirada.',
+      content: '⚠️ Sessão não encontrada ou expirada. O bot pode ter reiniciado. Inicie um novo questionário no canal do curso MAA.',
       flags: MessageFlags.Ephemeral,
     })
   }
@@ -324,6 +344,34 @@ async function finishQuiz(guild, userId, reason) {
     .setTimestamp()
 
   await channel.send({ embeds: [resultEmbed] })
+
+  // Envia resultado no servidor de logs
+  try {
+    const logsGuild = guild.client.guilds.cache.get(config.guilds.logs)
+    if (logsGuild) {
+      const logChannel = logsGuild.channels.cache.get(config.logsChannels.cursoMAA)
+      if (logChannel) {
+        const member = guild.members.cache.get(userId) || await guild.members.fetch(userId).catch(() => null)
+        const displayName = member ? member.displayName : userId
+
+        const logEmbed = new EmbedBuilder()
+          .setColor(color)
+          .setTitle('📋 Resultado do Curso MAA')
+          .addFields(
+            { name: '👤 Membro', value: `<@${userId}> (${displayName})`, inline: true },
+            { name: '📊 Resultado', value: passed ? '✅ Aprovado' : (reason === 'timeout' ? '⏱️ Tempo esgotado' : '❌ Reprovado'), inline: true },
+            { name: '🎯 Acertos', value: `${session.score}/${total}`, inline: true },
+            { name: '⏱️ Tempo', value: `${elapsed} minutos`, inline: true },
+          )
+          .setFooter({ text: config.branding.footerText })
+          .setTimestamp()
+
+        await logChannel.send({ embeds: [logEmbed] })
+      }
+    }
+  } catch (e) {
+    console.error('Erro ao enviar log do curso MAA:', e)
+  }
 
   // Se aprovado, adiciona cargo
   if (passed) {

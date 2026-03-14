@@ -1,12 +1,12 @@
 # Genesis Police - Discord Bot
 
 ## Overview
-Bot Discord para a organização **Genesis Police**, construído com discord.js v14 + Sequelize/SQLite.
+Bot Discord para a organização **Genesis Police**, construído com discord.js v14 + Sequelize/PostgreSQL (Supabase).
 
 ## Tech Stack
 - **Runtime:** Node.js
 - **Framework:** discord.js v14
-- **Database:** SQLite via Sequelize (arquivo `database.sqlite`)
+- **Database:** PostgreSQL via Sequelize + Supabase (connection string em `DATABASE_URL` no `.env`)
 - **Config:** dotenv (`.env`) + `config.js` centralizado
 
 ## Project Structure
@@ -30,7 +30,7 @@ deploy-commands.js - Registra slash commands na guild
 
 ### IDs e Configuração
 - **NUNCA** hardcodar Discord IDs (channels, roles, guilds) nos arquivos. Tudo deve vir de `config.js`.
-- `.env` contém apenas: TOKEN, GUILD_ID, CLIENT_ID, APPLICATION_ID.
+- `.env` contém: TOKEN, GUILD_ID, CLIENT_ID, APPLICATION_ID, DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT.
 - Novos canais/roles devem ser adicionados em `config.js` na seção apropriada.
 
 ### Comandos
@@ -59,6 +59,35 @@ CMD > SCMD > H.C > I.C > COR > T-COR > MAJ > CAP > 1TEN > 2TEN > ASP > S-TEN > 1
 node deploy-commands.js   # Registrar/atualizar slash commands
 node index.js             # Iniciar o bot
 ```
+
+## Git & Colaboração
+- **Repositório:** https://github.com/Marquiin0/BotDiscord.git
+- **Colaboradores:** Mvzii (`dev-mvzii`) e kidin0800 (`dev-kidin0800`)
+- Cada colaborador trabalha na sua **branch pessoal** — nunca commitar direto na `main`.
+
+### Fluxo de trabalho
+1. Antes de começar a trabalhar: `git pull origin main` para pegar atualizações
+2. Trabalhar na branch pessoal (`dev-mvzii` ou `dev-kidin0800`)
+3. Ao terminar alterações:
+   ```bash
+   git add .
+   git commit -m "descrição das alterações"
+   git push
+   ```
+4. Para juntar ao código principal: abrir **Pull Request** no GitHub (branch pessoal → `main`)
+5. Após o PR ser mergeado, atualizar a branch local:
+   ```bash
+   git checkout main
+   git pull origin main
+   git checkout dev-<nome>
+   git merge main
+   ```
+
+### Arquivos protegidos pelo .gitignore (NÃO são enviados ao GitHub)
+- `.env` — cada colaborador deve criar o seu localmente
+- `database.sqlite` / `*.sqlite` — banco de dados local
+- `node_modules/` — dependências (rodar `npm install` após clonar)
+- `backups/`, `dump.sql`, `dump_postgres.sql`, `desktop.ini`
 
 ## Important Notes
 - Guild principal: `config.guilds.main`
