@@ -171,8 +171,8 @@ module.exports = {
     // Verifica advertências expiradas
     checkExpiredWarnings(client)
 
-    // Leaderboard update
-    startLeaderboardUpdate(client)
+    // Leaderboard update (desativado)
+    // startLeaderboardUpdate(client)
 
     // Identificação expirada (DM + alerta staff a cada 6h)
     setInterval(async () => {
