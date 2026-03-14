@@ -293,6 +293,39 @@ module.exports = {
         })
 
         await registroExistente.update({ messageId: sentMessage.id })
+
+        // Log para servidor de logs
+        ;(async () => {
+          try {
+            const logGuild = await interaction.client.guilds.fetch(LOG_GUILD_ID).catch(() => null)
+            if (!logGuild) return
+            const logChannel = logGuild.channels.cache.get(LOG_CHANNEL_ID)
+              || await logGuild.channels.fetch(LOG_CHANNEL_ID).catch(() => null)
+            if (!logChannel?.isTextBased()) return
+
+            const embedLog = new EmbedBuilder()
+              .setColor(0x2f3136)
+              .setAuthor({
+                name: `${config.branding.footerText} - Log de Identificações`,
+                iconURL: interaction.guild.iconURL() ?? undefined,
+              })
+              .setTitle(registroExistente ? '🔄 Identificação Atualizada' : '🪪 Nova Identificação')
+              .addFields(
+                { name: '👤 Oficial', value: `<@${userId}>`, inline: true },
+                { name: '📅 Registro', value: `<t:${registroUnix}:F>`, inline: true },
+                { name: '⏰ Expira', value: `<t:${expiracaoUnix}:R>`, inline: true },
+              )
+              .setImage(publicUrl)
+              .setFooter({
+                text: `Sistema de Identificações - ${config.branding.footerText}`,
+                iconURL: interaction.client.user.displayAvatarURL(),
+              })
+
+            await logChannel.send({ embeds: [embedLog] })
+          } catch (err) {
+            console.error('Erro ao enviar log de identificação para servidor de logs:', err)
+          }
+        })()
       })
 
       collector.on('end', async collected => {

@@ -407,6 +407,19 @@ module.exports = {
             embeds: [embed],
           })
         }
+
+        // Log para servidor de logs
+        try {
+          const logsGuild = interaction.client.guilds.cache.get(config.guilds.logs)
+          if (logsGuild) {
+            const logsChannel = logsGuild.channels.cache.get(config.logsChannels.promocao)
+              || await logsGuild.channels.fetch(config.logsChannels.promocao).catch(() => null)
+            if (logsChannel) await logsChannel.send({ embeds: [embed] })
+          }
+        } catch (err) {
+          console.error('Erro ao enviar log de promoção para servidor de logs:', err)
+        }
+
         const membernick = await interaction.guild.members.fetch(
           interaction.user.id,
         )
