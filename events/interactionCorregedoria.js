@@ -514,6 +514,24 @@ async function handleRankChange(interaction, action) {
     })
   }
 
+  // Log para servidor de logs
+  try {
+    const logsGuild = interaction.client.guilds.cache.get(config.guilds.logs)
+    if (logsGuild) {
+      const logsChannelId = action === 'promover' ? config.logsChannels.promocao : config.logsChannels.rebaixamento
+      const logsChannel = logsGuild.channels.cache.get(logsChannelId)
+        || await logsGuild.channels.fetch(logsChannelId).catch(() => null)
+      if (logsChannel) {
+        await logsChannel.send({
+          content: `<@${targetId}>`,
+          embeds: [logEmbed],
+        })
+      }
+    }
+  } catch (err) {
+    console.error('Erro ao enviar log de promoção/rebaixamento para servidor de logs:', err)
+  }
+
   // DM
   try {
     const dmEmbed = new EmbedBuilder()

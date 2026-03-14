@@ -293,6 +293,18 @@ async function handleExoneration(interaction, member, reason) {
     const logChannel = interaction.guild.channels.cache.get(LOG_CHANNEL_ID)
     if (logChannel) await logChannel.send({ embeds: [logEmbed] })
 
+    // Log para servidor de logs
+    try {
+      const logsGuild = interaction.client.guilds.cache.get(config.guilds.logs)
+      if (logsGuild) {
+        const logsChannel = logsGuild.channels.cache.get(config.logsChannels.corregedoria)
+          || await logsGuild.channels.fetch(config.logsChannels.corregedoria).catch(() => null)
+        if (logsChannel) await logsChannel.send({ embeds: [logEmbed] })
+      }
+    } catch (err) {
+      console.error('Erro ao enviar log de exoneração para servidor de logs:', err)
+    }
+
     try {
       await member.send({
         content: `❌ Você foi exonerado do servidor **${interaction.guild.name}**.`,
