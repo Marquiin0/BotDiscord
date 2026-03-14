@@ -1,0 +1,310 @@
+[
+  {
+    "id": 1,
+    "question": "Quem tem prioridade de modulação em uma situação de QRR MÁXIMO?",
+    "options": [
+      { "label": "A", "text": "A VTR mais próxima" },
+      { "label": "B", "text": "O oficial com patente mais alta" },
+      { "label": "C", "text": "STE" },
+      { "label": "D", "text": "SOG" }
+    ],
+    "answer": "D"
+  },
+  {
+    "id": 2,
+    "question": "Em caso de rádio congestionado, como o policial deve proceder antes de modular?",
+    "options": [
+      { "label": "A", "text": "Interromper quem estiver falando" },
+      { "label": "B", "text": "Modificar a frequência" },
+      { "label": "C", "text": "Falar alto e rápido" },
+      { "label": "D", "text": "Aplicar QRX e aguardar canal livre" }
+    ],
+    "answer": "D"
+  },
+  {
+    "id": 3,
+    "question": "Quando lhe perguntam seu QRA, o que você deve responder?",
+    "options": [
+      { "label": "A", "text": "Não respondo nada, pois não sou obrigada a informar" },
+      { "label": "B", "text": "Informo o lugar onde estou" },
+      { "label": "C", "text": "Falo um apelido para facilitar a comunicação" },
+      { "label": "D", "text": "Falo minha patente e nome" }
+    ],
+    "answer": "D"
+  },
+  {
+    "id": 4,
+    "question": "Qual das opções abaixo representa uma modulação incorreta?",
+    "options": [
+      { "label": "A", "text": "\"QAP Central, VTR X, QRU de tráfico no QTH Y, solicitando QRR\"" },
+      { "label": "B", "text": "\"QAP Central, iniciando acompanhamento de código 3 em uma X7 no QTH do Comedy, alguma QSV para prestar apoio?\"" },
+      { "label": "C", "text": "\"QAP Central, VTR Alfa 01, QRU de furto, QTH Rua B\"" },
+      { "label": "D", "text": "\"Boa tarde, Central, aqui é a VTR do Marquinhos, tamo com um problema aqui\"" }
+    ],
+    "answer": "D"
+  },
+  {
+    "id": 5,
+    "question": "Em uma situação de fogo aberto, com visualização clara de arma em mãos, qual o código de ocorrência correto a ser usado?",
+    "options": [
+      { "label": "A", "text": "Código 2" },
+      { "label": "B", "text": "Código 4" },
+      { "label": "C", "text": "Código 3" },
+      { "label": "D", "text": "Código 5" }
+    ],
+    "answer": "D"
+  },
+  {
+    "id": 6,
+    "question": "O que deve ser evitado segundo as regras da rádio para manter uma modulação correta?",
+    "options": [
+      { "label": "A", "text": "Usar linguagem formal demais" },
+      { "label": "B", "text": "Falar pausadamente" },
+      { "label": "C", "text": "Pedir repetição da mensagem" },
+      { "label": "D", "text": "Usar expressões informais como \"lá\", \"aqui\", \"ali\"" }
+    ],
+    "answer": "D"
+  },
+  {
+    "id": 7,
+    "question": "Em uma ocorrência com 3 viaturas e helicóptero presente, quem deve modular a situação final (Código 4)?",
+    "options": [
+      { "label": "A", "text": "A última viatura a chegar" },
+      { "label": "B", "text": "A viatura que fez a prisão" },
+      { "label": "C", "text": "A primária" },
+      { "label": "D", "text": "Helicóptero" }
+    ],
+    "answer": "D"
+  },
+  {
+    "id": 8,
+    "question": "Ao solicitar apoio via rádio para iniciar um acompanhamento, qual informação é essencial incluir na modulação?",
+    "options": [
+      { "label": "A", "text": "Apenas o número da viatura solicitante" },
+      { "label": "B", "text": "O horário da solicitação" },
+      { "label": "C", "text": "Informar somente o local, sem o código da ocorrência" },
+      { "label": "D", "text": "O código da ocorrência, o local (QTH) e o sentido do acompanhamento" }
+    ],
+    "answer": "D"
+  },
+  {
+    "id": 9,
+    "question": "O que fazer se um indivíduo não puder ser levado por falta de espaço na viatura?",
+    "options": [
+      { "label": "A", "text": "Liberar o indivíduo sem registro" },
+      { "label": "B", "text": "Informar no rádio para não registrar nada" },
+      { "label": "C", "text": "Deixar o indivíduo no local" },
+      { "label": "D", "text": "Solicitar uma viatura para conduzi-lo até a delegacia" }
+    ],
+    "answer": "D"
+  },
+  {
+    "id": 10,
+    "question": "Quando uma viatura estiver em QRL, o que isso indica?",
+    "options": [
+      { "label": "A", "text": "Que está pronta para nova ocorrência" },
+      { "label": "B", "text": "Que está a caminho do batalhão" },
+      { "label": "C", "text": "Que está em patrulhamento" },
+      { "label": "D", "text": "Que está ocupada, não podendo atender outras chamadas" }
+    ],
+    "answer": "D"
+  },
+  {
+    "id": 11,
+    "question": "Qual a forma correta de modulação para solicitar apoio imediato para iniciar um acompanhamento?",
+    "options": [
+      { "label": "A", "text": "\"Central, viatura pede reforço\"" },
+      { "label": "B", "text": "\"Solicito apoio para ocorrência código 1\"" },
+      { "label": "C", "text": "\"VTR 01 solicita ajuda para patrulhamento\"" },
+      { "label": "D", "text": "\"QAP CENTRAL, VTR 02 iniciando acompanhamento de código 2 no QTH do Banco Central, sentido cassino.\"" }
+    ],
+    "answer": "D"
+  },
+  {
+    "id": 12,
+    "question": "A modulação \"Cabo Arrascaeta liberando código 5 no pneu por PWG\" está:",
+    "options": [
+      { "label": "A", "text": "Correta, pois em situações de PWG a primária libera código 5." },
+      { "label": "B", "text": "Errada, porque PWG não permite liberar código 5." },
+      { "label": "C", "text": "Correta, pois qualquer um pode liberar no pneu por PWG." },
+      { "label": "D", "text": "Errada, pois o cabo não tem autorização para liberar código 5, apenas 3SGT+" }
+    ],
+    "answer": "D"
+  },
+  {
+    "id": 13,
+    "question": "Em um acompanhamento com duas VTRs e duas motos, quantas QSVs estão presentes?",
+    "options": [
+      { "label": "A", "text": "1" },
+      { "label": "B", "text": "2" },
+      { "label": "C", "text": "4" },
+      { "label": "D", "text": "3" }
+    ],
+    "answer": "D"
+  },
+  {
+    "id": 14,
+    "question": "Qual o código usado para monitoramento silencioso de área, investigação?",
+    "options": [
+      { "label": "A", "text": "Código 1" },
+      { "label": "B", "text": "Código 2" },
+      { "label": "C", "text": "Código 5" },
+      { "label": "D", "text": "Código 6" }
+    ],
+    "answer": "D"
+  },
+  {
+    "id": 15,
+    "question": "Quando a situação volta ao normal após um acompanhamento, qual código é ativado?",
+    "options": [
+      { "label": "A", "text": "Código 0" },
+      { "label": "B", "text": "Código 3" },
+      { "label": "C", "text": "Código 6" },
+      { "label": "D", "text": "Código 4" }
+    ],
+    "answer": "D"
+  },
+  {
+    "id": 16,
+    "question": "Qual das situações abaixo justifica o uso da sirene 3?",
+    "options": [
+      { "label": "A", "text": "Abordagem de caminhão" },
+      { "label": "B", "text": "Patrulha em área neutra" },
+      { "label": "C", "text": "Acompanhamento em fuga" },
+      { "label": "D", "text": "Transporte de indivíduo detido" }
+    ],
+    "answer": "B"
+  },
+  {
+    "id": 17,
+    "question": "Uma guarnição com 3 policiais deve proceder da seguinte forma ao abordar um suspeito armado:",
+    "options": [
+      { "label": "A", "text": "Todos descem e avançam juntos" },
+      { "label": "B", "text": "O P1 desce com P2 e P3 cobre" },
+      { "label": "C", "text": "Apenas o P2 faz tudo sozinho" },
+      { "label": "D", "text": "P2 e P3 desembarcam, P1 permanece no carro" }
+    ],
+    "answer": "D"
+  },
+  {
+    "id": 18,
+    "question": "Qual das opções abaixo descreve corretamente a função do P3 em uma patrulha com 3 policiais?",
+    "options": [
+      { "label": "A", "text": "Comandar a VTR" },
+      { "label": "B", "text": "Transportar presos na caçamba" },
+      { "label": "C", "text": "Ficar de vigia com fuzil" },
+      { "label": "D", "text": "Ajudar com GPS e perímetro" }
+    ],
+    "answer": "D"
+  },
+  {
+    "id": 19,
+    "question": "Qual código representa uma área controlada após ação policial?",
+    "options": [
+      { "label": "A", "text": "Código 2" },
+      { "label": "B", "text": "Código 3" },
+      { "label": "C", "text": "Código 6" },
+      { "label": "D", "text": "Código 4" }
+    ],
+    "answer": "D"
+  },
+  {
+    "id": 20,
+    "question": "Em um patrulhamento sem intercorrências, a sirene deve estar:",
+    "options": [
+      { "label": "A", "text": "Alternando entre 1 e 2" },
+      { "label": "B", "text": "Na intensidade 1" },
+      { "label": "C", "text": "Na intensidade 2" },
+      { "label": "D", "text": "Desligada" }
+    ],
+    "answer": "D"
+  },
+  {
+    "id": 21,
+    "question": "Qual tipo de veículo não conta como QSV em uma ação?",
+    "options": [
+      { "label": "A", "text": "Carro" },
+      { "label": "B", "text": "Caminhão blindado" },
+      { "label": "C", "text": "Duas motos" },
+      { "label": "D", "text": "Helicóptero" }
+    ],
+    "answer": "D"
+  },
+  {
+    "id": 22,
+    "question": "Em uma situação de Código 3, quantas VTRs (QSVs) devem estar presentes para iniciar o acompanhamento?",
+    "options": [
+      { "label": "A", "text": "2 VTRs" },
+      { "label": "B", "text": "3 VTRs" },
+      { "label": "C", "text": "Toda a guarnição" },
+      { "label": "D", "text": "4 VTRs" }
+    ],
+    "answer": "D"
+  },
+  {
+    "id": 23,
+    "question": "Qual subunidade tem prioridade em ações no norte da cidade, especialmente relacionadas ao tráfico?",
+    "options": [
+      { "label": "A", "text": "S.T.E" },
+      { "label": "B", "text": "S.O.G" },
+      { "label": "C", "text": "C.O.R.E" },
+      { "label": "D", "text": "C.R.A.S.H" }
+    ],
+    "answer": "D"
+  },
+  {
+    "id": 24,
+    "question": "Em qual situação a viatura terciária pode dar QTA?",
+    "options": [
+      { "label": "A", "text": "Quando o suspeito para o carro e se rende" },
+      { "label": "B", "text": "Quando a viatura secundária assume a modulação" },
+      { "label": "C", "text": "Quando um carro com insulfilme passa" },
+      { "label": "D", "text": "Quando um cidadão é atropelado durante o acompanhamento" }
+    ],
+    "answer": "D"
+  },
+  {
+    "id": 25,
+    "question": "Durante uma patrulha em Código 2, o suspeito inicia disparos contra a VTR. A situação evolui para Código 5. A entrada de novas viaturas está:",
+    "options": [
+      { "label": "A", "text": "Limitada a 2 VTRs de apoio" },
+      { "label": "B", "text": "Permitida com autorização de um 3sgt+" },
+      { "label": "C", "text": "Restrita às VTRs já presentes na ocorrência" },
+      { "label": "D", "text": "Liberada para toda a guarnição, sem limite de QSVs" }
+    ],
+    "answer": "D"
+  },
+  {
+    "id": 26,
+    "question": "Em uma situação de Código 5, quantas viaturas podem integrar a ocorrência?",
+    "options": [
+      { "label": "A", "text": "Apenas a Primária e Secundária" },
+      { "label": "B", "text": "Máximo de 3 viaturas" },
+      { "label": "C", "text": "Até 4, incluindo moto" },
+      { "label": "D", "text": "Sem limite de QSVs, toda a guarnição pode atuar" }
+    ],
+    "answer": "D"
+  },
+  {
+    "id": 27,
+    "question": "O que caracteriza uma abordagem com Código 2?",
+    "options": [
+      { "label": "A", "text": "Patrulhamento normal" },
+      { "label": "B", "text": "Quebra de lei de trânsito" },
+      { "label": "C", "text": "Visualização de arma em mãos" },
+      { "label": "D", "text": "Tráfico de drogas e roubo a caixas eletrônicos" }
+    ],
+    "answer": "D"
+  },
+  {
+    "id": 28,
+    "question": "Qual é a forma correta de informar o Direito de Miranda ao suspeito no momento da prisão?",
+    "options": [
+      { "label": "A", "text": "\"Você tem direito a um médico e pode sair quando quiser.\"" },
+      { "label": "B", "text": "\"Você está preso e deve falar tudo que sabe, pois isso pode ajudar na investigação.\"" },
+      { "label": "C", "text": "\"Você pode falar, mas não é obrigado a permanecer calado ou pedir um advogado.\"" },
+      { "label": "D", "text": "\"Você tem o direito de permanecer em silêncio. Tudo o que disser pode ser usado contra você no tribunal. Você tem o direito a um advogado e, se não puder pagar por um, um defensor será nomeado para você.\"" }
+    ],
+    "answer": "D"
+  }
+]

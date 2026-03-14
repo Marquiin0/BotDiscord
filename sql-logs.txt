@@ -1,0 +1,189 @@
+2025-03-17T21:24:04.317Z - Query executada por campin (233987539264995328): SELECT * FROM userpontos
+2025-03-21T23:47:35.244Z - Query executada por campin (233987539264995328): SELECT * FROM userpontos
+2025-03-21T23:47:57.198Z - Query executada por campin (233987539264995328): SELECT * FROM useractions
+2025-03-22T03:21:05.071Z - Query executada por campin (233987539264995328): SELECT * FROM Tickets WHERE userIdOpened = '450406892074827789';
+2025-03-22T03:21:12.861Z - Query executada por campin (233987539264995328): SELECT * FROM Tickets WHERE userIdOpened = '450406892074827789';
+2025-03-22T03:21:51.787Z - Query executada por campin (233987539264995328): SELECT * FROM Tickets WHERE userIdOpened = '450406892074827789';
+2025-03-22T03:22:03.740Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '450406892074827789';
+2025-03-22T03:22:34.450Z - Query executada por campin (233987539264995328): SELECT * FROM Tickets WHERE userIdOpened = '450406892074827789';
+2025-03-22T03:22:48.351Z - Query executada por campin (233987539264995328): SELECT * FROM Tickets WHERE userIdOpened = '450406892074827789';
+2025-03-22T03:23:10.527Z - Query executada por campin (233987539264995328): SELECT userIdOpened FROM Tickets WHERE userIdOpened LIKE '%450406892074827789%';
+2025-03-22T03:23:25.570Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '450406892074827789';
+2025-03-22T03:23:34.265Z - Query executada por campin (233987539264995328): SELECT * FROM Tickets WHERE userIdOpened = '450406892074827789';
+2025-03-22T03:23:46.777Z - Query executada por campin (233987539264995328): SELECT userIdOpened FROM Tickets WHERE userIdOpened LIKE '%450406892074827789%';
+2025-03-23T00:27:37.097Z - Query executada por campin (233987539264995328): SELECT * FROM Loja WHERE userId = '355379238305529858';
+2025-03-23T00:28:14.618Z - Query executada por campin (233987539264995328): SELECT * FROM Loja WHERE userId = '355379238305529858' AND item LIKE '5 Relatórios';
+2025-03-23T00:28:49.026Z - Query executada por campin (233987539264995328): SELECT * FROM Loja WHERE userId = '355379238305529858'   AND item LIKE '5 Relatórios%';
+2025-03-23T00:30:05.059Z - Query executada por campin (233987539264995328): DELETE FROM Loja WHERE userId = '355379238305529858'   AND item LIKE '5 Relatórios%';
+2025-03-23T00:30:12.860Z - Query executada por campin (233987539264995328): SELECT * FROM Loja WHERE userId = '355379238305529858'   AND item LIKE '5 Relatórios%';
+2025-03-23T03:21:31.333Z - Query executada por campin (233987539264995328): SELECT * FROM RoleLimits
+2025-03-23T03:31:30.229Z - Query executada por campin (233987539264995328): SELECT * FROM userpontos
+2025-03-24T20:00:28.918Z - Query executada por campin (233987539264995328): SELECT * FROM useractions WHERE userId = ' 476722657791049747'
+2025-03-24T20:00:38.873Z - Query executada por campin (233987539264995328): SELECT * FROM useractions WHERE userId = ' 476722657791049747';
+2025-03-24T20:00:48.717Z - Query executada por campin (233987539264995328): SELECT * FROM useractions
+2025-03-24T20:01:36.074Z - Query executada por campin (233987539264995328): SELECT userId FROM useractions WHERE userId = 515910481446174722;
+2025-03-24T20:02:35.646Z - Query executada por campin (233987539264995328): SELECT * FROM useractions WHERE userId = '515910481446174722';
+2025-03-24T20:03:03.994Z - Query executada por campin (233987539264995328): SELECT * FROM useractions WHERE userId = '476722657791049747';
+2025-03-25T00:51:45.283Z - Query executada por campin (233987539264995328): SELECT * FROM Tickets WHERE userIdOpened = '694173236958855169'
+2025-03-25T00:52:39.405Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '694173236958855169';
+2025-03-25T00:52:45.595Z - Query executada por campin (233987539264995328): SELECT * FROM Tickets WHERE userIdOpened = '694173236958855169';
+2025-03-25T00:56:12.705Z - Query executada por campin (233987539264995328): SELECT * FROM Tickets WHERE userIdOpened = '694173236958855169';
+2025-03-25T00:56:34.193Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '694173236958855169';
+2025-03-25T00:56:37.638Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '694173236958855169';
+2025-03-25T00:56:46.943Z - Query executada por campin (233987539264995328): SELECT * FROM Tickets WHERE userIdOpened = '694173236958855169';
+2025-03-25T00:57:03.823Z - Query executada por campin (233987539264995328): SELECT * FROM Tickets WHERE userIdOpened = '515910481446174722';
+2025-03-25T00:57:30.358Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '515910481446174722';
+2025-03-25T00:57:42.662Z - Query executada por campin (233987539264995328): SELECT * FROM Tickets WHERE userIdOpened = '515910481446174722';
+2025-03-25T00:57:57.599Z - Query executada por campin (233987539264995328): SELECT * FROM Tickets WHERE userIdOpened = '1305607104333217834';
+2025-03-25T00:58:07.638Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '1305607104333217834';
+2025-03-25T04:07:01.366Z - Query executada por campin (233987539264995328): SELECT * FROM Tickets WHERE userIdOpened = '1338225610522362029';
+2025-03-25T04:07:17.870Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '1338225610522362029';
+2025-03-25T04:07:35.511Z - Query executada por campin (233987539264995328): SELECT * FROM Tickets WHERE userIdOpened = '1338225610522362029';
+2025-03-26T02:56:47.146Z - Query executada por campin (233987539264995328): SELECT * FROM Tickets WHERE userIdOpened = '1205245991197081751';
+2025-03-26T02:58:09.337Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '1205245991197081751';
+2025-03-26T02:58:20.423Z - Query executada por campin (233987539264995328): SELECT * FROM Tickets WHERE userIdOpened = '1205245991197081751';
+2025-03-29T21:29:08.654Z - Query executada por campin (233987539264995328): SELECT * FROM Tickets WHERE userIdOpened = '879205643100241920';
+2025-03-29T21:29:56.874Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '879205643100241920';
+2025-03-29T21:30:06.723Z - Query executada por campin (233987539264995328): SELECT * FROM Tickets WHERE userIdOpened = '879205643100241920';
+2025-03-29T22:18:27.229Z - Query executada por campin (233987539264995328): SELECT * FROM Tickets WHERE userIdOpened = '512674710300131348';
+2025-03-29T22:18:39.264Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '512674710300131348';
+2025-03-30T01:28:02.785Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '879205643100241920';
+2025-03-30T19:27:22.789Z - Query executada por campin (233987539264995328): SELECT * FROM Tickets WHERE userIdOpened = '694173236958855169';
+2025-03-30T19:27:32.919Z - Query executada por campin (233987539264995328): SELECT * FROM Tickets WHERE userIdOpened = '233987539264995328';
+2025-03-30T19:28:31.971Z - Query executada por campin (233987539264995328): SELECT * FROM Tickets WHERE status = 'aberto'   AND createdAt < CURRENT_DATE;
+2025-03-30T19:29:07.271Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '423113230219608084';
+2025-03-30T19:29:15.782Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '382177935831990272';
+2025-03-30T19:29:21.506Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '708384558189510768';
+2025-03-30T19:29:28.531Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '971091471841230888';
+2025-03-30T19:29:40.590Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '708384558189510768';
+2025-03-30T19:29:47.260Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '1218618797112426631';
+2025-03-30T19:29:56.081Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '1145102121927184394';
+2025-03-30T19:30:06.375Z - Query executada por campin (233987539264995328): SELECT * FROM Tickets WHERE status = 'aberto'   AND createdAt < CURRENT_DATE;
+2025-03-30T19:33:05.295Z - Query executada por campin (233987539264995328): SELECT * FROM Tickets WHERE status = 'aberto'   AND createdAt < CURRENT_DATE;
+2025-03-30T19:33:52.239Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '1042226662361804911';
+2025-03-30T19:33:59.513Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '375383012780539904';
+2025-03-30T19:34:05.424Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '1324026938066468965';
+2025-03-30T19:34:12.091Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '936939830338805831';
+2025-03-30T19:34:16.877Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '707411671500455957';
+2025-03-30T19:34:22.381Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '936939830338805831';
+2025-03-30T19:34:26.787Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '1153033071080263700';
+2025-03-30T19:34:39.288Z - Query executada por campin (233987539264995328): SELECT * FROM Tickets WHERE status = 'aberto'   AND createdAt < CURRENT_DATE;
+2025-03-30T19:35:26.972Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '809698051890348063';
+2025-03-30T19:35:32.090Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '916451293583802378';
+2025-03-30T19:35:39.663Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '928304748787007558';
+2025-03-30T19:35:45.174Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '818925703058817064';
+2025-03-30T19:35:51.828Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '818925703058817064';
+2025-03-30T19:35:56.384Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '1329257926409322536';
+2025-03-30T19:36:00.570Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '959816098524590080';
+2025-03-30T19:36:07.804Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '959816098524590080';
+2025-03-30T19:36:19.062Z - Query executada por campin (233987539264995328): SELECT * FROM Tickets WHERE status = 'aberto'   AND createdAt < CURRENT_DATE;
+2025-03-30T19:36:46.185Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '359408998216105984';
+2025-03-30T19:36:50.565Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '1350891355643314176';
+2025-03-30T19:36:55.418Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '803076135529218098';
+2025-03-30T19:37:00.770Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '1282104853954297938';
+2025-03-30T19:37:07.898Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '1108804286588133446';
+2025-03-30T19:37:11.730Z - Query executada por campin (233987539264995328): DELETE FROM Tickets WHERE userIdOpened = '548330626743402499';
+2025-03-30T19:37:17.120Z - Query executada por campin (233987539264995328): SELECT * FROM Tickets WHERE status = 'aberto'   AND createdAt < CURRENT_DATE;
+2025-03-30T20:02:58.447Z - Query executada por campin (233987539264995328): SELECT * FROM Tickets WHERE userIdOpened = '233987539264995328';
+2025-03-31T21:36:48.111Z - Query executada por campin (233987539264995328): SELECT * FROM identificacaos
+2025-03-31T21:37:20.057Z - Query executada por campin (233987539264995328): SELECT * FROM Identificacaos WHERE userId = '397785494211002369';
+2025-03-31T21:37:29.028Z - Query executada por campin (233987539264995328): DELETE FROM Identificacaos WHERE userId = '397785494211002369';
+2025-03-31T21:37:35.723Z - Query executada por campin (233987539264995328): SELECT * FROM Identificacaos WHERE userId = '397785494211002369';
+2025-03-31T22:37:40.634Z - Query executada por campin (233987539264995328): DELETE FROM Identificacaos WHERE userId = '233987539264995328';
+2025-04-04T21:33:59.957Z - Query executada por campin (233987539264995328): SELECT * FROM PromotionRequests WHERE userId = "926690458262994984";
+2025-04-04T21:34:14.555Z - Query executada por campin (233987539264995328): DELETE FROM PromotionRequests WHERE userId = "926690458262994984";
+2025-04-12T01:46:57.271Z - Query executada por campin (233987539264995328): select * from identificacaos where userId = '483408668222816256'
+2025-04-12T01:47:07.575Z - Query executada por campin (233987539264995328): delete from identificacaos where userId = '483408668222816256'
+2025-04-12T06:15:37.570Z - Query executada por campin (233987539264995328): select * from identificacaos where userId = '309791601616617483';
+2025-04-12T06:15:47.982Z - Query executada por campin (233987539264995328): delete from identificacaos where userId = '309791601616617483';
+2025-04-12T06:15:53.934Z - Query executada por campin (233987539264995328): delete from identificacaos where userId = '879205643100241920';
+2025-04-12T06:16:00.914Z - Query executada por campin (233987539264995328): delete from identificacaos where userId = '1070704629228245023';
+2025-04-12T06:16:09.267Z - Query executada por campin (233987539264995328): delete from identificacaos where userId = '1072198559031631982';
+2025-04-12T06:16:16.956Z - Query executada por campin (233987539264995328): delete from identificacaos where userId = '1335230762890559529';
+2025-04-12T06:16:28.447Z - Query executada por campin (233987539264995328): delete from identificacaos where userId = '1279242265872830577';
+2025-04-12T20:13:05.570Z - Query executada por campin (233987539264995328): delete from identificacaos where userId = '1310349008929292380';
+2025-04-12T20:13:13.568Z - Query executada por campin (233987539264995328): delete from identificacaos where userId = '375383012780539904';
+2025-04-12T22:58:41.925Z - Query executada por campin (233987539264995328): delete from identificacaos where userId = '727701270345023488';
+2025-04-13T19:14:32.994Z - Query executada por campin (233987539264995328): delete from identificacaos where userId= '1278091900250882203';
+2025-04-13T19:14:38.152Z - Query executada por campin (233987539264995328): delete from identificacaos where userId= '1203121766118199333';
+2025-04-13T19:14:44.018Z - Query executada por campin (233987539264995328): delete from identificacaos where userId= '674437174367617030';
+2025-04-16T20:22:30.233Z - Query executada por campin (233987539264995328): select * from identificacaos where userId = '937895365095612416'
+2025-04-16T20:23:04.138Z - Query executada por campin (233987539264995328): delete from identificacaos where id= '23'
+2025-04-16T20:23:08.965Z - Query executada por campin (233987539264995328): select * from identificacaos where id= '23'
+2025-04-16T20:23:23.514Z - Query executada por campin (233987539264995328): select * from identificacaos where userId = '937895365095612416';
+2025-04-16T20:24:54.208Z - Query executada por campin (233987539264995328): SELECT * FROM identificacaos WHERE userId IN (     SELECT userId     FROM identificacaos     GROUP BY userId     HAVING COUNT(DISTINCT id) > 1 ) ORDER BY userId, id;
+2025-04-16T20:25:28.985Z - Query executada por campin (233987539264995328): delete from identificacaos where id = '36';
+2025-04-16T20:25:42.783Z - Query executada por campin (233987539264995328): SELECT * FROM identificacaos WHERE userId IN (     SELECT userId     FROM identificacaos     GROUP BY userId     HAVING COUNT(DISTINCT id) > 1 ) ORDER BY userId, id;
+2025-04-16T20:27:19.819Z - Query executada por campin (233987539264995328): delete from identificacaos where id = '36';
+2025-04-16T20:27:27.620Z - Query executada por campin (233987539264995328): delete from identificacaos where id = '6';
+2025-04-16T20:27:58.445Z - Query executada por campin (233987539264995328): delete from identificacaos where id = '38';
+2025-04-16T20:28:05.062Z - Query executada por campin (233987539264995328): delete from identificacaos where id = '105';
+2025-04-16T20:28:12.247Z - Query executada por campin (233987539264995328): delete from identificacaos where id = '69';
+2025-04-16T20:28:18.554Z - Query executada por campin (233987539264995328): delete from identificacaos where id = '106';
+2025-04-16T20:28:24.340Z - Query executada por campin (233987539264995328): delete from identificacaos where id = '91';
+2025-04-16T20:28:29.099Z - Query executada por campin (233987539264995328): delete from identificacaos where id = '20';
+2025-04-16T20:28:34.083Z - Query executada por campin (233987539264995328): delete from identificacaos where id = '22';
+2025-04-16T20:28:43.319Z - Query executada por campin (233987539264995328): delete from identificacaos where id = '92';
+2025-04-16T20:28:48.976Z - Query executada por campin (233987539264995328): delete from identificacaos where id = '37';
+2025-04-16T20:28:54.361Z - Query executada por campin (233987539264995328): delete from identificacaos where id = '78';
+2025-04-16T20:29:00.626Z - Query executada por campin (233987539264995328): delete from identificacaos where id = '30';
+2025-04-16T20:29:05.901Z - Query executada por campin (233987539264995328): delete from identificacaos where id = '81';
+2025-04-16T20:29:10.872Z - Query executada por campin (233987539264995328): delete from identificacaos where id = '23';
+2025-04-16T20:29:18.114Z - Query executada por campin (233987539264995328): delete from identificacaos where id = '94';
+2025-04-27T02:58:17.534Z - Query executada por campin (233987539264995328): select * from identificacaos where userId = "767601542445662269";
+2025-04-27T02:58:35.733Z - Query executada por campin (233987539264995328): delete from identificacaos where userId = "767601542445662269";
+2025-04-27T02:58:58.848Z - Query executada por campin (233987539264995328): delete from identificacaos where userId = "1246480604661289053";
+2025-04-27T02:59:28.604Z - Query executada por campin (233987539264995328): select * from identificacaos where userId = "937895365095612416";
+2025-05-26T18:10:26.806Z - Query executada por campin (233987539264995328): SELECT * FROM Tickets WHERE userIdOpened = '870741609828991007'
+2025-05-26T19:14:08.598Z - Query executada por campin (233987539264995328): select * from Tickets where status = 'aberto'
+2025-05-26T19:14:37.817Z - Query executada por campin (233987539264995328): Delete From Tickets where status = 'aberto'
+2025-05-26T19:14:49.186Z - Query executada por campin (233987539264995328): SELECT * From Tickets where status = 'aberto'
+2025-05-26T19:14:52.973Z - Query executada por campin (233987539264995328): SELECT * From Tickets where status = 'aberto'
+2025-06-18T00:25:30.075Z - Query executada por campin (233987539264995328): DELETE FROM MemberIDs; DELETE FROM PromotionRecords; DELETE FROM PromotionRequests; DELETE FROM Warnings; DELETE FROM ActionReports; DELETE FROM ActionReportsAlls; DELETE FROM Aposentadoria; DELETE FROM PrisonReports; DELETE FROM WeaponLogs; DELETE FROM WeeklyPoints; DELETE FROM Ausencia; DELETE FROM PatrolHours; DELETE FROM ApreensaoReports; DELETE FROM inscricoes; DELETE FROM courses; DELETE FROM UserLogs; DELETE FROM UserPoints; DELETE FROM usermultiplicadores; DELETE FROM donationrecords; DELETE FROM useractions; DELETE FROM userpontos; DELETE FROM Loja; DELETE FROM bets; DELETE FROM Timers; DELETE FROM sorteio; DELETE FROM RoleLimits; DELETE FROM RemovedRoles; DELETE FROM Tickets; DELETE FROM Identificacaos;
+2025-06-18T00:25:52.370Z - Query executada por campin (233987539264995328): select * from MemberIDs
+2025-06-18T01:37:17.970Z - Query executada por campin (233987539264995328): select * from ActionReportsAlls
+2025-06-18T01:37:33.491Z - Query executada por campin (233987539264995328): select * from actionreports
+2025-06-18T01:38:08.533Z - Query executada por campin (233987539264995328): DELETE FROM Identificacaos;
+2025-06-18T01:38:13.154Z - Query executada por campin (233987539264995328): DELETE FROM PromotionRecords;
+2025-06-18T01:38:17.242Z - Query executada por campin (233987539264995328): DELETE FROM ActionReports;
+2025-06-18T01:38:23.731Z - Query executada por campin (233987539264995328): select * from actionreports
+2025-06-18T01:38:29.637Z - Query executada por campin (233987539264995328): DELETE FROM ActionReportsAlls;
+2025-06-18T01:38:33.278Z - Query executada por campin (233987539264995328): DELETE FROM Aposentadoria;
+2025-06-18T01:38:37.064Z - Query executada por campin (233987539264995328): DELETE FROM PrisonReports;
+2025-06-18T01:38:40.593Z - Query executada por campin (233987539264995328): DELETE FROM WeaponLogs;
+2025-06-18T01:38:43.896Z - Query executada por campin (233987539264995328): DELETE FROM WeeklyPoints;
+2025-06-18T01:38:47.301Z - Query executada por campin (233987539264995328): DELETE FROM Ausencia;
+2025-06-18T01:38:51.194Z - Query executada por campin (233987539264995328): DELETE FROM PatrolHours;
+2025-06-18T01:38:54.718Z - Query executada por campin (233987539264995328): DELETE FROM ApreensaoReports;
+2025-06-18T01:38:58.496Z - Query executada por campin (233987539264995328): DELETE FROM inscricoes;
+2025-06-18T01:39:02.488Z - Query executada por campin (233987539264995328): DELETE FROM courses;
+2025-06-18T01:39:09.861Z - Query executada por campin (233987539264995328): DELETE FROM UserLogs;
+2025-06-18T01:39:13.357Z - Query executada por campin (233987539264995328): DELETE FROM UserPoints;
+2025-06-18T01:40:40.752Z - Query executada por campin (233987539264995328): delete from usermultiplicadores
+2025-06-18T01:40:57.488Z - Query executada por campin (233987539264995328): delete from donationrecords
+2025-06-18T01:41:10.994Z - Query executada por campin (233987539264995328): delete from useractions
+2025-06-18T01:41:29.419Z - Query executada por campin (233987539264995328): delete from userpontos
+2025-06-18T01:41:40.687Z - Query executada por campin (233987539264995328): delete from loja
+2025-06-18T01:41:52.330Z - Query executada por campin (233987539264995328): delete from bets
+2025-06-18T01:42:25.513Z - Query executada por campin (233987539264995328): delete from timers
+2025-06-18T01:42:40.546Z - Query executada por campin (233987539264995328): delete from sorteio
+2025-06-18T01:43:07.254Z - Query executada por campin (233987539264995328): delete from tickets
+2025-06-18T01:47:27.109Z - Query executada por campin (233987539264995328): delete from identificacaos
+2025-06-19T00:11:03.692Z - Query executada por campin (233987539264995328): delete from loja
+2025-06-26T17:15:36.835Z - Query executada por campin (233987539264995328): select * from memberids
+2025-06-26T18:18:17.896Z - Query executada por campin (233987539264995328): select * from memberids
+2025-06-26T18:18:38.206Z - Query executada por campin (233987539264995328): select * from memberids where discordId = "429"
+2025-06-26T22:14:51.255Z - Query executada por campin (233987539264995328): select * from memberids
+2025-06-29T19:42:37.881Z - Query executada por campin (233987539264995328): select * from tickets where useridopened= "934617182657208340";
+2025-06-29T20:37:09.959Z - Query executada por campin (233987539264995328): delete from tickets where useridopened= "934617182657208340";
+2025-06-30T16:06:43.743Z - Query executada por campin (233987539264995328): select * from donationrecords where userid="233987539264995328"
+2025-06-30T16:07:58.745Z - Query executada por campin (233987539264995328): update donationrecords SET expiracao = '2025-06-30 16:06:21.637 +00:00' where userId = "233987539264995328"
+2025-06-30T16:08:22.569Z - Query executada por campin (233987539264995328): select * from donationrecords where userid="233987539264995328"
+2025-06-30T16:08:35.058Z - Query executada por campin (233987539264995328): select * from donationrecords where userId="233987539264995328"
+2025-06-30T16:08:57.468Z - Query executada por campin (233987539264995328): select * from donationrecords where userId= "233987539264995328"
+2025-06-30T16:09:03.263Z - Query executada por campin (233987539264995328): select * from donationrecords
+2025-06-30T16:11:31.209Z - Query executada por campin (233987539264995328): select * from donationrecords
+2025-06-30T22:00:28.700Z - Query executada por campin (233987539264995328): select * from identificacaos
+2025-06-30T22:00:48.937Z - Query executada por campin (233987539264995328): select * from identificacaos where userId = "536931750140575764"
+2025-06-30T22:02:04.456Z - Query executada por campin (233987539264995328): UPDATE identificacaos SET dataExpiracao = DATETIME('now', '+1 year') WHERE id = 777;
+2025-06-30T22:02:22.327Z - Query executada por campin (233987539264995328): SELECT * FROM IDENTIFICACAOS WHERE ID = "777"

@@ -1,0 +1,10 @@
+concat(
+    substring(outputs('Compor_3'), 6, 4),
+    '-',
+    substring(outputs('Compor_3'), 3, 2),
+    '-',
+    substring(outputs('Compor_3'), 0, 2),
+    'T',
+    outputs('Compor_1'),
+    ':00'
+)

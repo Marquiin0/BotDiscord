@@ -1,0 +1,61 @@
+const { SlashCommandBuilder, PermissionsBitField } = require('discord.js');
+const { Identificacao } = require('../database.js');
+
+module.exports = {
+  data: new SlashCommandBuilder()
+    .setName('removeriden')
+    .setDescription('Remove o registro de identificação de um usuário pelo userId do Discord.')
+    .addStringOption(option =>
+      option
+        .setName('user_id')
+        .setDescription('ID do usuário do Discord (ex: 123456789012345678)')
+        .setRequired(true)
+    ),
+
+  async execute(interaction) {
+
+     // Verifica permissão
+          if (
+            !interaction.member.permissions.has(PermissionsBitField.Flags.Administrator) &&
+            !interaction.memberPermissions.has(PermissionsBitField.Flags.UseApplicationCommands)
+          ) {
+            return await interaction.editReply({
+              content: '❌ Você não tem permissão.'
+            })
+          }
+
+    const userId = interaction.options.getString('user_id');
+
+    // Verifica se o userId é válido
+    if (!/^\d{17,20}$/.test(userId)) {
+      return interaction.reply({
+        content: '❌ O ID fornecido não é válido. Verifique e tente novamente.',
+        ephemeral: true,
+      });
+    }
+
+    try {
+      const registro = await Identificacao.findOne({ where: { userId } });
+
+      if (!registro) {
+        return interaction.reply({
+          content: `⚠️ Nenhum registro de identificação encontrado para o ID \`${userId}\`.`,
+          ephemeral: true,
+        });
+      }
+
+      await registro.destroy();
+
+      return interaction.reply({
+        content: `✅ O registro de identificação do usuário com ID \`${userId}\` foi **removido com sucesso** do banco de dados.`,
+        ephemeral: true,
+      });
+    } catch (error) {
+      console.error('Erro ao remover identificação:', error);
+      return interaction.reply({
+        content: '❌ Ocorreu um erro ao tentar remover o registro. Tente novamente mais tarde.',
+        ephemeral: true,
+      });
+    }
+  },
+};

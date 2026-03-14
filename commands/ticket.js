@@ -1,0 +1,107 @@
+// File: slashCriarTicket.js
+const {
+  SlashCommandBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  EmbedBuilder,
+} = require('discord.js')
+const { PermissionsBitField } = require('discord.js')
+const { MessageFlags } = require('discord.js')
+const config = require('../config')
+
+module.exports = {
+  data: new SlashCommandBuilder()
+    .setName('criarticket')
+    .setDescription('Cria um painel para abertura de tickets'),
+
+  async execute(interaction) {
+    if (
+      !interaction.member.permissions.has(
+        PermissionsBitField.Flags.Administrator,
+      ) &&
+      !interaction.memberPermissions.has(
+        PermissionsBitField.Flags.UseApplicationCommands,
+      )
+    ) {
+      return interaction.reply({
+        content: '❌ Você não tem permissão.',
+        flags: MessageFlags.Ephemeral,
+      })
+    }
+
+    const embed = new EmbedBuilder()
+      .setTitle(`📩 Tickets ${config.branding.name}`)
+      .setDescription(
+        'Selecione abaixo o tipo de ticket que deseja abrir. \nCada ticket permite tratar um assunto específico:',
+      )
+      .addFields(
+        {
+          name: '🛂 Corregedoria',
+          value:
+            'Use este ticket para assuntos internos, denúncias e solicitação de exoneração',
+        },
+        {
+          name: '🚨 Alto Comando',
+          value:
+            'Ticket reservado para assuntos voltados ao comando da polícia e, também, para a compra de ✨ Donater.',
+        },
+        {
+          name: '📋 Recrutamento',
+          value:
+            'Abra aqui para processos de recrutamento, promoções ou transferências.',
+        },
+        {
+          name: '❓ Dúvidas',
+          value: 'Use este ticket para tirar dúvidas gerais.',
+        },
+        {
+          name: '👑 Donater',
+          value: 'Use este ticket para doações ou compras de ✨ Donater',
+        },
+      )
+      .setImage(config.branding.bannerUrl)
+      .setColor('#FFFFFF')
+      .setFooter({
+        text: 'Escolha o ticket que melhor se encaixa na sua necessidade.',
+      })
+      .setTimestamp()
+
+    // Cria 5 botões: corregedoria, alto_comando, recrutamento, duvidas, porte_armas
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId('ticket_corregedoria')
+        .setLabel('🛂 Corregedoria')
+        .setStyle(ButtonStyle.Danger),
+
+      new ButtonBuilder()
+        .setCustomId('ticket_alto_comando')
+        .setLabel('🚨 Alto Comando')
+        .setStyle(ButtonStyle.Secondary),
+
+      new ButtonBuilder()
+        .setCustomId('ticket_recrutamento')
+        .setLabel('📋 Recrutamento')
+        .setStyle(ButtonStyle.Secondary),
+
+      new ButtonBuilder()
+        .setCustomId('ticket_duvidas')
+        .setLabel('❓ Dúvidas')
+        .setStyle(ButtonStyle.Secondary),
+
+      new ButtonBuilder()
+        .setCustomId('ticket_donater')
+        .setLabel('👑 Donater')
+        .setStyle(ButtonStyle.Secondary),
+    )
+
+    // Envia o painel público (embed + botões)
+    await interaction.channel.send({ embeds: [embed], components: [row] })
+
+    // Responde ao slash command de forma ephemeral
+    await interaction.reply({
+      content: '✅ Painel de tickets criado com sucesso!',
+      flags: MessageFlags.Ephemeral,
+    })
+  },
+}

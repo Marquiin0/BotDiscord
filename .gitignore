@@ -1,0 +1,8 @@
+/node_modules
+.env
+database.sqlite
+*.sqlite
+desktop.ini
+backups/
+dump.sql
+dump_postgres.sql

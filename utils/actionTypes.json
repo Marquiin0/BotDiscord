@@ -1,0 +1,13 @@
+[
+    { "id_tipo": "relatorio_apreensao", "nome_tipo": "Apreensão", "pontos_base": 5 },
+    { "id_tipo": "relatorio_prisao", "nome_tipo": "Prisão", "pontos_base": 30 },
+    { "id_tipo": "relatorio_acao_cmd_vitoria", "nome_tipo": "Ação Comandada (Vitória)", "pontos_base": 50 },
+    { "id_tipo": "relatorio_acao_cmd_derrota", "nome_tipo": "Ação Comandada (Derrota)", "pontos_base": 10 },
+    { "id_tipo": "relatorio_acao_part_vitoria", "nome_tipo": "Ação Participada (Vitória)", "pontos_base": 30 },
+    { "id_tipo": "relatorio_acao_part_derrota", "nome_tipo": "Ação Participada (Derrota)", "pontos_base": 5 },
+    { "id_tipo": "identificacao", "nome_tipo": "Identificação", "pontos_base": 100 },
+    { "id_tipo": "hora_ptr", "nome_tipo": "Hora de PTR", "pontos_base": 10 },
+    { "id_tipo": "fechar_ticket", "nome_tipo": "Ticket Finalizado", "pontos_base": 50 },
+    { "id_tipo": "receber_adv", "nome_tipo": "Receber ADV", "pontos_base": -30 },
+    { "id_tipo": "participante_prisao", "nome_tipo": "Participante Prisão", "pontos_base": 5 }
+]

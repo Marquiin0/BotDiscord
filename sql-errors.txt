@@ -1,0 +1,90 @@
+2025-03-21T03:00:49.338Z - Erro executando query por campin (233987539264995328): SELECT * FROM useractions WHERE id_tipo = 'BET_10_BRASIL'   AND nome_tipo = 'aposta'   AND opcao = 'brasil';
+Erro: SQLITE_ERROR: no such column: opcao
+
+2025-03-21T03:03:19.181Z - Erro executando query por campin (233987539264995328): SELECT * FROM useractions WHERE id_tipo = 'BET_10_Brasil'   AND nome_tipo = 'Aposta'   AND opcao = 'Brasil';
+Erro: SQLITE_ERROR: no such column: opcao
+
+2025-03-22T03:20:35.612Z - Erro executando query por campin (233987539264995328): select * from tickets where userIdOpened '450406892074827789'
+Erro: SQLITE_ERROR: near "'450406892074827789'": syntax error
+
+2025-03-25T00:57:15.741Z - Erro executando query por campin (233987539264995328): DELETE * FROM Tickets WHERE userIdOpened = '515910481446174722';
+Erro: SQLITE_ERROR: near "*": syntax error
+
+2025-03-31T21:37:08.779Z - Erro executando query por campin (233987539264995328): SELECT FROM Identificacao WHERE userId = '397785494211002369';
+Erro: SQLITE_ERROR: near "FROM": syntax error
+
+2025-04-04T21:33:33.664Z - Erro executando query por campin (233987539264995328): SELECT * FROM PromotionRequests WHERE = userId = '926690458262994984'
+Erro: SQLITE_ERROR: near "=": syntax error
+
+2025-04-04T21:33:47.417Z - Erro executando query por campin (233987539264995328): SELECT * FROM PromotionRequests WHERE = userId = "926690458262994984";
+Erro: SQLITE_ERROR: near "=": syntax error
+
+2025-04-12T06:15:32.598Z - Erro executando query por campin (233987539264995328): select * from where identificacaos where userId = '309791601616617483';
+Erro: SQLITE_ERROR: near "where": syntax error
+
+2025-04-16T20:22:22.734Z - Erro executando query por campin (233987539264995328): select * from indetificacaos where userId = '937895365095612416'
+Erro: SQLITE_ERROR: no such table: indetificacaos
+
+2025-04-16T20:23:18.493Z - Erro executando query por campin (233987539264995328): select * from identificacaos where userId = '
+Erro: SQLITE_ERROR: unrecognized token: "'"
+
+2025-05-26T17:58:26.742Z - Erro executando query por campin (233987539264995328): SELECT * FROM Tickets where userId = '870741609828991007'
+Erro: SQLITE_ERROR: no such column: userId
+
+2025-05-26T18:05:29.202Z - Erro executando query por campin (233987539264995328): SELECT Tickets FROM sqlite_master WHERE type='table';
+Erro: SQLITE_ERROR: no such column: Tickets
+
+2025-05-26T18:05:39.587Z - Erro executando query por campin (233987539264995328): SELECT Ticket FROM sqlite_master WHERE type='table';
+Erro: SQLITE_ERROR: no such column: Ticket
+
+2025-05-26T18:15:43.488Z - Erro executando query por campin (233987539264995328): select * from ticekts where status = 'aberto'
+Erro: SQLITE_ERROR: no such table: ticekts
+
+2025-05-26T19:14:01.986Z - Erro executando query por campin (233987539264995328): select * from ticekts where status = 'aberto'
+Erro: SQLITE_ERROR: no such table: ticekts
+
+2025-05-26T19:14:28.149Z - Erro executando query por campin (233987539264995328): Delete Tickets where status = 'aberto'
+Erro: SQLITE_ERROR: near "Tickets": syntax error
+
+2025-06-18T01:35:11.567Z - Erro executando query por campin (233987539264995328): select * from apreensoes
+Erro: SQLITE_ERROR: no such table: apreensoes
+
+2025-06-18T01:36:09.471Z - Erro executando query por campin (233987539264995328): select * from apreensoesreport
+Erro: SQLITE_ERROR: no such table: apreensoesreport
+
+2025-06-18T01:37:12.403Z - Erro executando query por campin (233987539264995328): ActionReportsAlls
+Erro: SQLITE_ERROR: near "ActionReportsAlls": syntax error
+
+2025-06-18T01:42:04.807Z - Erro executando query por campin (233987539264995328): delete timers
+Erro: SQLITE_ERROR: near "timers": syntax error
+
+2025-06-18T01:43:23.777Z - Erro executando query por campin (233987539264995328): delete from identifacacaos
+Erro: SQLITE_ERROR: no such table: identifacacaos
+
+2025-06-18T01:43:46.449Z - Erro executando query por campin (233987539264995328): delete from identificacao
+Erro: SQLITE_ERROR: no such table: identificacao
+
+2025-06-18T01:44:02.906Z - Erro executando query por campin (233987539264995328): delete from identificacoes
+Erro: SQLITE_ERROR: no such table: identificacoes
+
+2025-06-18T01:44:22.948Z - Erro executando query por campin (233987539264995328): delete from identifacacaos
+Erro: SQLITE_ERROR: no such table: identifacacaos
+
+2025-06-18T01:44:47.440Z - Erro executando query por campin (233987539264995328): delete from identificacao
+Erro: SQLITE_ERROR: no such table: identificacao
+
+2025-06-29T19:40:58.934Z - Erro executando query por campin (233987539264995328): select * from tickets where userId = "934617182657208340";
+Erro: SQLITE_ERROR: no such column: userId
+
+2025-06-29T19:41:09.578Z - Erro executando query por campin (233987539264995328): select * from tickets where useropenedi = "934617182657208340";
+Erro: SQLITE_ERROR: no such column: useropenedi
+
+2025-06-29T19:41:14.970Z - Erro executando query por campin (233987539264995328): select * from tickets where useropenedid = "934617182657208340";
+Erro: SQLITE_ERROR: no such column: useropenedid
+
+2025-06-29T19:41:24.374Z - Erro executando query por campin (233987539264995328): select * from tickets where useropenedid = "934617182657208340";
+Erro: SQLITE_ERROR: no such column: useropenedid
+
+2025-06-29T20:37:04.500Z - Erro executando query por campin (233987539264995328): delete * from tickets where useridopened= "934617182657208340";
+Erro: SQLITE_ERROR: near "*": syntax error
+
