@@ -138,5 +138,6 @@ function startLeaderboardUpdate(client) {
 }
 
 module.exports = {
-    startLeaderboardUpdate
+    startLeaderboardUpdate,
+    updateLeaderboard
 };
