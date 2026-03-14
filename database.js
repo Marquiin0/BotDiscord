@@ -1,8 +1,15 @@
 const { Sequelize, DataTypes } = require('sequelize');
-const sequelize = new Sequelize({
-    dialect: 'sqlite',
-    storage: 'database.sqlite',
+require('dotenv').config();
+
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
+    dialect: 'postgres',
     logging: false,
+    dialectOptions: {
+        ssl: {
+            require: true,
+            rejectUnauthorized: false,
+        },
+    },
 });
 
 
@@ -739,37 +746,9 @@ const VictoryDefeat = sequelize.define('VictoryDefeat', {
     timestamps: true,
 });
 
-QuizResult.sync();
-SetagemConfig.sync();
-VictoryDefeat.sync();
-Identificacao.sync();
-RemovedRole.sync();
-RoleLimit.sync();
-Sorteio.sync()
-Bet.sync()
-Loja.sync();
-DonationRecords.sync();
-UserMultiplicadores.sync();
-UserActions.sync();
-UserPontos.sync();
-Course.sync();
-Inscricao.sync();
-Ticket.sync();
-ApreensaoReports.sync(); // Garante que a tabela será criada
-Aposentadoria.sync(); // Garante que a tabela será criada
-PromotionRecords.sync(); // Garante que a tabela seja criada no banco de dados
-PromotionRequests.sync();
-PrisonReports.sync();
-ActionReports.sync();
-ActionReportsAll.sync();
-UserLog.sync();
-MemberID.sync();
-sequelize.sync({ alter: true });
-PatrolHours.sync();
-WeaponLog.sync();
-UserPoints.sync()
-WeeklyPoints.sync()
-Ausencia.sync()
+sequelize.sync({ alter: false }).catch(err => {
+    console.error('[DB] Erro ao sincronizar tabelas:', err.message);
+});
 
 module.exports = {
     UserPoints,
