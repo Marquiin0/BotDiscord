@@ -223,4 +223,37 @@ module.exports = {
 
     // ==================== OWNER ====================
     ownerId: '233987539264995328',
+
+    // ==================== BATALHÕES ====================
+    // Servidores externos de batalhão com sincronização ao servidor principal
+    battalions: [
+        {
+            guildId: '1481606531160997953',
+            channelId: '1481718192782184658',
+            roleId: '1481718994229661868',
+            roleName: 'S.W.A.T',
+            mainRoleId: '1481720985743921455',
+        },
+        {
+            guildId: '1483574861866602756',
+            channelId: '1483574862747275408',
+            roleId: '1483574861866602757',
+            roleName: 'S.O.G',
+            mainRoleId: '1477408727253647556',
+        },
+        {
+            guildId: '1483575520577720502',
+            channelId: '1483575521009991820',
+            roleId: '1483575520577720503',
+            roleName: 'S.T.E',
+            mainRoleId: '1477408727253647555',
+        },
+        {
+            guildId: '1474523272732344390',
+            channelId: '1474523278969405440',
+            roleId: '1474523272732344397',
+            roleName: 'MerryWeather',
+            mainRoleId: '1477408727253647557',
+        },
+    ],
 };
