@@ -15,6 +15,13 @@ const { Warning } = require('../database')
 const { Op } = require('sequelize')
 const config = require('../config')
 
+function getRankTag(roleId) {
+  for (const key of config.rankOrder) {
+    if (config.ranks[key].roleId === roleId) return config.ranks[key].tag
+  }
+  return 'Cargo desconhecido'
+}
+
 const promotionTags = config.promotionTags
 
 module.exports = {
@@ -155,8 +162,8 @@ module.exports = {
           .setDescription('Um rebaixamento foi realizado com sucesso.')
           .addFields(
             { name: 'Oficial', value: `<@${user.id}>`, inline: true },
-            { name: 'De', value: `<@&${oldRoleId}>`, inline: true },
-            { name: 'Para', value: `<@&${newRoleId}>`, inline: true },
+            { name: 'De', value: getRankTag(oldRoleId), inline: true },
+            { name: 'Para', value: getRankTag(newRoleId), inline: true },
             {
               name: 'Rebaixado por',
               value: `<@${interaction.user.id}>`,
