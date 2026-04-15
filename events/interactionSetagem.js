@@ -62,7 +62,7 @@ async function handleSolicitarSetagem(interaction, client) {
       .addFields(
         {
           name: '👩 Roupa Estagiário Feminina',
-          value: '```\nJaqueta: 566 0\nBlusa: 15 0\nMãos: 14 0\nCalça: 207 0\nSapatos: 2 10\nColete: 62 1\n```',
+          value: '```\nJaqueta: 566 0\nCalça: 207 0\nSapatos: 2 10\n```',
           inline: true,
         },
         {
@@ -131,7 +131,7 @@ async function handleSolicitarSetagem(interaction, client) {
         .addFields(
           {
             name: '👩 Roupa Estagiário Feminina',
-            value: '```\nJaqueta: 566 0\nBlusa: 15 0\nMãos: 14 0\nCalça: 207 0\nSapatos: 2 10\nColete: 62 1\n```',
+            value: '```\nJaqueta: 566 0\nCalça: 207 0\nSapatos: 2 10\n```',
             inline: true,
           },
           {
