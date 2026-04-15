@@ -12,7 +12,9 @@ const {
 } = require('discord.js')
 const { Ausencia } = require('../database')
 const { MessageFlags } = require('discord.js')
+const path = require('path')
 const config = require('../config')
+const { attachImage } = require('../utils/attachImage')
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -34,7 +36,8 @@ module.exports = {
       .setTitle('🌴 Solicitação de Ausência')
       .setDescription('📅 Selecione a quantidade de dias de ausência.')
       .setColor('#FF0000')
-      .setImage(config.branding.bannerUrl)
+    const banner = attachImage(path.join(__dirname, '..', config.branding.bannerPath))
+    embed.setImage(banner.url)
 
     const selectMenu = new ActionRowBuilder().addComponents(
       new StringSelectMenuBuilder()
@@ -60,7 +63,7 @@ module.exports = {
     // Envia o componente para o canal específico
     const channel = interaction.guild.channels.cache.get(config.channels.ausencia)
     if (channel) {
-      await channel.send({ embeds: [embed], components: [selectMenu, row] })
+      await channel.send({ embeds: [embed], components: [selectMenu, row], files: [banner.attachment] })
       await interaction.reply({
         content: 'Componentes de ausência enviados para o canal especificado.',
         flags: MessageFlags.Ephemeral,

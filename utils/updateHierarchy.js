@@ -63,11 +63,20 @@ async function buildHierarchyMessage(guild) {
 
   let totalContingent = 0
 
-  try {
-    await guild.members.fetch()
-  } catch (error) {
-    console.error('Erro ao buscar membros da guilda:', error)
-    return ['Erro ao buscar membros da guilda.']
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      await guild.members.fetch()
+      break
+    } catch (error) {
+      const retryAfter = error.data?.retry_after || 30
+      if (attempt < 2) {
+        console.log(`Rate limited ao buscar membros. Tentando novamente em ${Math.ceil(retryAfter)}s... (tentativa ${attempt + 1}/3)`)
+        await new Promise(resolve => setTimeout(resolve, retryAfter * 1000))
+      } else {
+        console.error('Erro ao buscar membros da guilda após 3 tentativas:', error.message)
+        return ['Erro ao buscar membros da guilda.']
+      }
+    }
   }
 
   guild.members.cache.forEach(member => {

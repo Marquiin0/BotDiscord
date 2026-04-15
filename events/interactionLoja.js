@@ -9,8 +9,10 @@ const {
   ButtonStyle,
 } = require('discord.js')
 const config = require('../config')
-const { UserPontos, UserActions, Loja } = require('../database')
-const { MessageFlags } = require('discord.js')
+const { UserPontos, UserActions, Loja, Ticket } = require('../database')
+const { MessageFlags, ChannelType, PermissionFlagsBits } = require('discord.js')
+const fs = require('fs')
+const path = require('path')
 
 // Array de itens – deve ser idêntico ao usado em setuploja.js
 const lojaItens = [
@@ -26,6 +28,7 @@ const lojaItens = [
   { nome: '-10 dias promoção', valor: 700, cargo: '1477408727215898735' },
   { nome: 'Remover ADV', valor: 1000, cargo: '1477408727203053713' },
   { nome: '-15 dias promoção (Premium)', valor: 1000, cargo: '1477408727203053718' },
+  { nome: 'Item Misterioso', valor: 300 },
 ]
 
 // Objeto para armazenar temporariamente as compras pendentes (chave: userId)
@@ -199,6 +202,100 @@ module.exports = {
             }
           }
 
+        }
+
+        // 🎲 Item Misterioso — criar ticket automaticamente
+        const hasMisterioso = purchase.selectedItems.some(item => item.nome === 'Item Misterioso')
+        if (hasMisterioso) {
+          // Atribuir cargo imediato ao comprar
+          try {
+            const purchaseRole = interaction.guild.roles.cache.get(config.itemMisterioso.purchaseRoleId)
+            if (purchaseRole) await interaction.member.roles.add(purchaseRole)
+          } catch (e) {
+            console.error('Erro ao atribuir cargo de compra do Item Misterioso:', e)
+          }
+
+          try {
+            const counterFilePath = path.join(__dirname, 'ticketCounter.json')
+            let ticketNumber = 1
+            try {
+              if (fs.existsSync(counterFilePath)) {
+                const data = fs.readFileSync(counterFilePath, 'utf8')
+                ticketNumber = JSON.parse(data).counter
+                fs.writeFileSync(counterFilePath, JSON.stringify({ counter: ticketNumber + 1 }, null, 2))
+              }
+            } catch (e) { /* usa 1 */ }
+
+            const userName = interaction.user.username.toLowerCase()
+            const shortTicketName = `mst-${userName}-${ticketNumber.toString().padStart(3, '0')}`
+            const channelName = `🎲・${shortTicketName}`
+
+            const overwrites = [
+              { id: interaction.guild.roles.everyone, deny: [PermissionFlagsBits.ViewChannel] },
+              { id: interaction.user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] },
+              { id: interaction.client.user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ManageChannels] },
+            ]
+
+            // Adicionar os 4 usuários autorizados
+            for (const uid of config.itemMisterioso.authorizedUsers) {
+              overwrites.push({ id: uid, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] })
+            }
+
+            const ticketChannel = await interaction.guild.channels.create({
+              name: channelName,
+              type: ChannelType.GuildText,
+              parent: config.categories.tickets,
+              permissionOverwrites: overwrites,
+            })
+
+            await Ticket.create({
+              ticketIdentifier: shortTicketName,
+              userIdOpened: interaction.user.id,
+              status: 'aberto',
+            })
+
+            const ticketEmbed = new EmbedBuilder()
+              .setColor(0x0099ff)
+              .setTitle('🎟 Novo Ticket Aberto - MST')
+              .setDescription(
+                `Olá, <@${interaction.user.id}>!\n\n` +
+                `**Identificador:** \`${shortTicketName}\`\n\n` +
+                `**Motivo da Abertura:**\n\`\`\`\nCompra de Item Misterioso\n\`\`\`\n` +
+                `Aguarde um administrador usar o comando \`/itemmisterioso\` para sortear seu resultado.\n\n` +
+                `👮 **Assumido por:** *(ninguém)*\n`
+              )
+              .setThumbnail(interaction.user.displayAvatarURL({ dynamic: true }))
+              .setFooter({ text: `Ticket #${ticketNumber.toString().padStart(3, '0')}` })
+              .setTimestamp()
+
+            const ticketRow = new ActionRowBuilder().addComponents(
+              new ButtonBuilder()
+                .setCustomId(`assumir_${ticketChannel.id}`)
+                .setLabel('👮 Assumir')
+                .setStyle(ButtonStyle.Primary),
+              new ButtonBuilder()
+                .setCustomId(`adicionar_${ticketChannel.id}`)
+                .setLabel('➕ Adicionar Usuário')
+                .setStyle(ButtonStyle.Success),
+              new ButtonBuilder()
+                .setCustomId(`remover_${ticketChannel.id}`)
+                .setLabel('➖ Remover Usuário')
+                .setStyle(ButtonStyle.Secondary),
+              new ButtonBuilder()
+                .setCustomId(`finalizar_${ticketChannel.id}`)
+                .setLabel('❌ Finalizar')
+                .setStyle(ButtonStyle.Danger),
+              new ButtonBuilder()
+                .setCustomId(`poke_${ticketChannel.id}`)
+                .setLabel('🔔 Poke Dono')
+                .setStyle(ButtonStyle.Secondary),
+            )
+
+            const ticketMsg = await ticketChannel.send({ content: `<@${interaction.user.id}>`, embeds: [ticketEmbed], components: [ticketRow] })
+            await ticketChannel.setTopic(`${interaction.user.id}|${ticketMsg.id}`)
+          } catch (err) {
+            console.error('Erro ao criar ticket de Item Misterioso:', err)
+          }
         }
 
         // 🔥 Log da compra

@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder, AttachmentBuilder } = require('discord.js');
 const { UserPontos } = require('../database');
 const { DateTime } = require('luxon');
 const config = require('../config');
@@ -48,15 +48,19 @@ async function buildLeaderboardMessage() {
     const localTime = DateTime.now().setZone('America/Sao_Paulo').toFormat('dd/MM/yyyy, HH:mm:ss');
     const leaderboard = await getTopUsers();
 
+    const bannerPath = path.join(__dirname, '..', config.branding.bannerPath);
+    const bannerName = path.basename(config.branding.bannerPath);
+    const attachment = new AttachmentBuilder(bannerPath, { name: bannerName });
+
     const embed = new EmbedBuilder()
         .setTitle('🏆 Ranking de Pontos da Loja')
         .setDescription(leaderboard || 'Não há dados disponíveis no momento.')
-        .setImage(config.branding.bannerUrl)
+        .setImage(`attachment://${bannerName}`)
         .setColor(config.branding.color)
         .setTimestamp()
         .setFooter({ text: `${config.branding.footerText} • Atualizado em ${localTime}` });
 
-    return embed;
+    return { embed, attachment };
 }
 
 // Na inicialização: encontra a mensagem do bot no canal, edita ela, e apaga as duplicadas
@@ -68,7 +72,7 @@ async function initLeaderboard(client, channelId) {
         const channel = guild.channels.cache.get(channelId);
         if (!channel) return;
 
-        const embed = await buildLeaderboardMessage();
+        const { embed, attachment } = await buildLeaderboardMessage();
 
         // Busca TODAS as mensagens do bot no canal
         const messages = await channel.messages.fetch({ limit: 50 });
@@ -79,7 +83,7 @@ async function initLeaderboard(client, channelId) {
             const sorted = [...botMessages.values()].sort((a, b) => a.createdTimestamp - b.createdTimestamp);
             const keepMessage = sorted[0];
 
-            await keepMessage.edit({ embeds: [embed] });
+            await keepMessage.edit({ embeds: [embed], files: [attachment] });
             saveMessageId(keepMessage.id);
             console.log(`Leaderboard editado na mensagem existente (${keepMessage.id}).`);
 
@@ -94,7 +98,7 @@ async function initLeaderboard(client, channelId) {
             }
         } else {
             // Nenhuma mensagem do bot — cria uma nova
-            const newMessage = await channel.send({ embeds: [embed] });
+            const newMessage = await channel.send({ embeds: [embed], files: [attachment] });
             saveMessageId(newMessage.id);
             console.log('Leaderboard criado e messageId salvo.');
         }
@@ -112,13 +116,14 @@ async function updateLeaderboard(client, channelId) {
         const channel = guild.channels.cache.get(channelId);
         if (!channel) return;
 
-        const embed = await buildLeaderboardMessage();
+        const { embed, attachment } = await buildLeaderboardMessage();
         const savedMessageId = loadMessageId();
 
         if (savedMessageId) {
             try {
                 const message = await channel.messages.fetch(savedMessageId);
-                await message.edit({ embeds: [embed] });
+                const newAttachment = new AttachmentBuilder(path.join(__dirname, '..', config.branding.bannerPath), { name: path.basename(config.branding.bannerPath) });
+                await message.edit({ embeds: [embed], files: [newAttachment] });
                 console.log('Leaderboard atualizado.');
                 return;
             } catch {
@@ -127,7 +132,7 @@ async function updateLeaderboard(client, channelId) {
         }
 
         // Se não existe ou não encontrou, cria nova
-        const newMessage = await channel.send({ embeds: [embed] });
+        const newMessage = await channel.send({ embeds: [embed], files: [attachment] });
         saveMessageId(newMessage.id);
         console.log('Leaderboard recriado e messageId salvo.');
     } catch (error) {

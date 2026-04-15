@@ -7,7 +7,9 @@ const {
   PermissionsBitField,
   MessageFlags,
 } = require('discord.js')
+const path = require('path')
 const config = require('../config')
+const { attachImage } = require('../utils/attachImage')
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -37,9 +39,11 @@ module.exports = {
         `Clique no botão abaixo para criar um relatório de prisão.\n\n` +
         `O relatório será criado e enviado no canal de logs de prisões.`,
       )
-      .setImage(config.branding.bannerUrl)
       .setFooter({ text: config.branding.footerText })
       .setTimestamp()
+
+    const banner = attachImage(path.join(__dirname, '..', config.branding.bannerPath))
+    embed.setImage(banner.url)
 
     const buttons = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
@@ -48,7 +52,7 @@ module.exports = {
         .setStyle(ButtonStyle.Primary),
     )
 
-    await channel.send({ embeds: [embed], components: [buttons] })
+    await channel.send({ embeds: [embed], components: [buttons], files: [banner.attachment] })
 
     await interaction.reply({
       content: `✅ Embed de prisões criado no canal <#${config.channels.prisaoEmbed}>!`,

@@ -33,7 +33,7 @@ const fetch = (...args) =>
 const { Identificacao } = require('../database.js')
 
 // Diretório e URL de anexos
-const ATTACHMENTS_DIR = '/var/www/transcripts/attachments/identificacoes'
+const ATTACHMENTS_DIR = path.join(__dirname, '..', 'attachments', 'identificacoes')
 const STATIC_BASE_URL =
   process.env.STATIC_BASE_URL ||
   'https://www.bpolpolice.com.br/transcripts/attachments/identificacoes'
@@ -184,7 +184,7 @@ module.exports = {
         try {
           const response = await fetch(attachment.url)
           if (!response.ok) throw new Error('URL inacessível')
-          const buffer = await response.buffer()
+          const buffer = Buffer.from(await response.arrayBuffer())
 
           const ext = path.extname(attachment.name) || '.png'
           const fileName = `ident_${userId}_${Date.now()}${ext}`

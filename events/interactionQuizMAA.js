@@ -194,7 +194,7 @@ async function sendQuestion(channel, session) {
       })),
     )
     .setFooter({
-      text: `Acertos: ${session.score}/${questionNumber - 1} | Tempo restante: ~${remaining} min`,
+      text: `Pergunta ${questionNumber} de ${total} | Tempo restante: ~${remaining} min`,
     })
 
   const buttons = new ActionRowBuilder().addComponents(
@@ -250,12 +250,10 @@ async function handleQuizAnswer(interaction) {
     session.score++
   }
 
-  // Desabilita botões da mensagem atual
+  // Desabilita botões da mensagem atual (sem revelar resposta correta)
   const disabledRow = new ActionRowBuilder().addComponents(
     currentQuestion.options.map(opt => {
-      let style = ButtonStyle.Secondary
-      if (opt.label === currentQuestion.answer) style = ButtonStyle.Success
-      else if (opt.label === selectedAnswer && !isCorrect) style = ButtonStyle.Danger
+      const style = opt.label === selectedAnswer ? ButtonStyle.Primary : ButtonStyle.Secondary
 
       return new ButtonBuilder()
         .setCustomId(`quiz_done_${opt.label}_${Date.now()}`)
@@ -266,17 +264,6 @@ async function handleQuizAnswer(interaction) {
   )
 
   await interaction.message.edit({ components: [disabledRow] })
-
-  // Feedback rápido
-  const feedbackEmbed = new EmbedBuilder()
-    .setColor(isCorrect ? '#00FF00' : '#FF0000')
-    .setDescription(
-      isCorrect
-        ? `✅ **Correto!** Resposta: **${currentQuestion.answer}**`
-        : `❌ **Incorreto!** Resposta correta: **${currentQuestion.answer}**`,
-    )
-
-  await interaction.channel.send({ embeds: [feedbackEmbed] })
 
   // Próxima pergunta ou finalizar
   session.currentQuestion++
@@ -383,12 +370,12 @@ async function finishQuiz(guild, userId, reason) {
     }
   }
 
-  // Deleta canal após 30 segundos
+  // Deleta canal após 2 segundos
   setTimeout(async () => {
     try {
       await channel.delete()
     } catch (e) {
       console.error('Erro ao deletar canal do quiz:', e)
     }
-  }, 30000)
+  }, 2000)
 }

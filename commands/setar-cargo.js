@@ -62,8 +62,8 @@ module.exports = {
             cargoAtribuir = opcaoEscolhida === 'cmd' ? config.ranks.SCMD.roleId : config.roles.membro;
         } else if (memberRoles.has(config.ranks.HC.roleId)) {
             cargoAtribuir = opcaoEscolhida === 'cmd' ? config.ranks.HC.roleId : config.roles.membro;
-        } else if (memberRoles.has(config.ranks.IC.roleId)) {
-            cargoAtribuir = opcaoEscolhida === 'cmd' ? config.ranks.IC.roleId : config.roles.membro;
+        } else if (memberRoles.has(config.ranks.IA.roleId)) {
+            cargoAtribuir = opcaoEscolhida === 'cmd' ? config.ranks.IA.roleId : config.roles.membro;
         } else {
             return interaction.editReply({
                 content: 'Lógica para o seu cargo ainda não foi implementada.',

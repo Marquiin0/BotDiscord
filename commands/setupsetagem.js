@@ -7,7 +7,9 @@ const {
   PermissionsBitField,
   MessageFlags,
 } = require('discord.js')
+const path = require('path')
 const config = require('../config')
+const { attachImage } = require('../utils/attachImage')
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -42,9 +44,11 @@ module.exports = {
         `4. **Foto do personagem** (fardamento correto)\n\n` +
         `Após o preenchimento, sua setagem será analisada pelo comando.`,
       )
-      .setImage(config.branding.bannerUrl)
       .setFooter({ text: config.branding.footerText })
       .setTimestamp()
+
+    const banner = attachImage(path.join(__dirname, '..', config.branding.bannerPath))
+    embed.setImage(banner.url)
 
     const buttons = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
@@ -53,7 +57,7 @@ module.exports = {
         .setStyle(ButtonStyle.Primary),
     )
 
-    await channel.send({ embeds: [embed], components: [buttons] })
+    await channel.send({ embeds: [embed], components: [buttons], files: [banner.attachment] })
 
     await interaction.reply({
       content: `✅ Embed de setagem criado no canal <#${config.channels.setagem}>!`,

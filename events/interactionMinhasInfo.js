@@ -1,18 +1,24 @@
 const {
   EmbedBuilder,
+  AttachmentBuilder,
   MessageFlags,
 } = require('discord.js')
+const fs = require('fs')
+const path = require('path')
 const {
   ActionReports,
   PrisonReports,
   ApreensaoReports,
   PromotionRecords,
   PatrolHours,
+  PatrolSession,
   Identificacao,
   QuizResult,
   MemberID,
 } = require('../database')
 const config = require('../config')
+const moment = require('moment-timezone')
+const { Sequelize, Op } = require('sequelize')
 
 module.exports = {
   name: 'interactionCreate',
@@ -65,7 +71,17 @@ async function showUserInfo(interaction, targetUserId, ephemeral = true) {
       PrisonReports.count({ where: { commanderId: targetUserId } }),
       ApreensaoReports.count({ where: { commanderId: targetUserId } }),
       PromotionRecords.findOne({ where: { userId: targetUserId } }),
-      PatrolHours.findOne({ where: { userId: targetUserId } }),
+      PatrolSession.findOne({
+        attributes: [
+          [Sequelize.fn('COALESCE', Sequelize.fn('SUM', Sequelize.col('duration')), 0), 'totalHours']
+        ],
+        where: {
+          discordId: targetUserId,
+          weekStart: moment().tz('America/Sao_Paulo').startOf('week').toDate(),
+          exitTime: { [Op.ne]: null },
+        },
+        raw: true,
+      }),
       Identificacao.findOne({
         where: { userId: targetUserId, status: 'ativo' },
         order: [['dataRegistro', 'DESC']],
@@ -74,11 +90,10 @@ async function showUserInfo(interaction, targetUserId, ephemeral = true) {
         where: { userId: targetUserId, passed: true },
         order: [['attemptDate', 'DESC']],
       }),
-      MemberID.findOne({ where: { discordId: targetUserId } }),
+      MemberID.findOne({ where: { memberId: targetUserId } }),
     ])
 
     // Contagem de participações em ações
-    const { Op } = require('sequelize')
     const actionParticipations = await ActionReports.count({
       where: {
         participants: { [Op.like]: `%${targetUserId}%` },
@@ -103,8 +118,8 @@ async function showUserInfo(interaction, targetUserId, ephemeral = true) {
       ? new Date(promotionRecord.lastPromotionDate).toLocaleDateString('pt-BR')
       : 'Sem registro'
 
-    // Horas totais
-    const totalHours = patrolData ? patrolData.hours.toFixed(1) : '0.0'
+    // Horas semanais (PatrolSession)
+    const totalHours = patrolData ? parseFloat(patrolData.totalHours).toFixed(1) : '0.0'
 
     // Identifica patente atual
     let currentRank = 'Sem patente'
@@ -128,7 +143,7 @@ async function showUserInfo(interaction, targetUserId, ephemeral = true) {
         { name: '🆔 ID', value: memberIdRecord ? memberIdRecord.memberId : 'N/A', inline: true },
         { name: '📅 Data de Entrada', value: joinDate, inline: true },
         { name: '📈 Último Up', value: lastPromotion, inline: true },
-        { name: '⏰ Horas Totais', value: `${totalHours}h`, inline: true },
+        { name: '⏰ Horas Semanais', value: `${totalHours}h`, inline: true },
         {
           name: '📋 Relatórios',
           value: `Total: **${totalRelatorios}**\nAções (cmd): **${actionCount}**\nAções (part): **${actionParticipations}**\nPrisões: **${prisonCount}**\nApreensões: **${apreensaoCount}**`,
@@ -149,8 +164,24 @@ async function showUserInfo(interaction, targetUserId, ephemeral = true) {
       .setTimestamp()
 
     // Adiciona foto de identificação se existir
+    const files = []
     if (identification && identification.fotoUrl) {
-      embed.setImage(identification.fotoUrl)
+      const fotoPath = identification.fotoUrl
+      // Se é um path local (salvo pelo sistema)
+      if (!fotoPath.startsWith('http') && fs.existsSync(fotoPath)) {
+        const file = new AttachmentBuilder(fotoPath, { name: 'identificacao.png' })
+        files.push(file)
+        embed.setImage('attachment://identificacao.png')
+      } else if (fotoPath.startsWith('http')) {
+        // URL antiga — tenta usar como attachment
+        try {
+          const file = new AttachmentBuilder(fotoPath, { name: 'identificacao.png' })
+          files.push(file)
+          embed.setImage('attachment://identificacao.png')
+        } catch {
+          embed.setImage(fotoPath)
+        }
+      }
       embed.addFields({
         name: '📸 Identificação',
         value: `Válida até: ${new Date(identification.dataExpiracao).toLocaleDateString('pt-BR')}`,
@@ -158,10 +189,10 @@ async function showUserInfo(interaction, targetUserId, ephemeral = true) {
       })
     }
 
-    await interaction.editReply({ embeds: [embed] })
+    await interaction.editReply({ embeds: [embed], files })
   } catch (error) {
     console.error('Erro ao mostrar informações:', error)
-    await interaction.editReply({ content: '❌ Erro ao buscar informações.' })
+    await interaction.editReply({ content: `❌ Erro ao buscar informações.\n\`\`\`${error.message}\`\`\`` })
   }
 }
 
@@ -172,14 +203,14 @@ async function handleCadastrarPonto(interaction) {
     const member = interaction.member
     const { MemberID } = require('../database')
 
-    // Verifica se já está cadastrado
+    // Verifica se já está cadastrado (memberId = Discord user ID, que é a PK)
     const existing = await MemberID.findOne({
-      where: { discordId: member.id },
+      where: { memberId: member.id },
     })
 
     if (existing) {
       return await interaction.editReply({
-        content: `✅ Você já está cadastrado!\n🆔 ID: **${existing.memberId}**\n👤 Nome: **${existing.memberName}**`,
+        content: `✅ Você já está cadastrado!\n🆔 ID: **${existing.discordId}**\n👤 Nome: **${existing.memberName}**`,
       })
     }
 
@@ -194,17 +225,17 @@ async function handleCadastrarPonto(interaction) {
       })
     }
 
-    const memberId = idMatch[1]
+    const inGameId = idMatch[1]
     const memberName = nameMatch ? nameMatch[1].trim() : nickname
 
     await MemberID.create({
       memberName,
-      discordId: member.id,
-      memberId,
+      discordId: inGameId,      // in-game ID
+      memberId: member.id,      // Discord user ID (PK)
     })
 
     await interaction.editReply({
-      content: `✅ Cadastro realizado com sucesso!\n🆔 ID: **${memberId}**\n👤 Nome: **${memberName}**`,
+      content: `✅ Cadastro realizado com sucesso!\n🆔 ID: **${inGameId}**\n👤 Nome: **${memberName}**`,
     })
   } catch (error) {
     console.error('Erro ao cadastrar ponto:', error)

@@ -7,7 +7,9 @@ const {
   PermissionsBitField,
   MessageFlags,
 } = require('discord.js')
+const path = require('path')
 const config = require('../config')
+const { attachImage } = require('../utils/attachImage')
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -46,9 +48,11 @@ module.exports = {
         `📝 **Cadastrar Ponto** - Cadastre-se no sistema\n` +
         `📸 **Fazer Identificação** - Envie sua foto de identificação`,
       )
-      .setImage(config.branding.bannerUrl)
       .setFooter({ text: config.branding.footerText })
       .setTimestamp()
+
+    const banner = attachImage(path.join(__dirname, '..', config.branding.bannerPath))
+    embed.setImage(banner.url)
 
     const row1 = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
@@ -87,7 +91,7 @@ module.exports = {
         .setStyle(ButtonStyle.Secondary),
     )
 
-    await channel.send({ embeds: [embed], components: [row1, row2, row3] })
+    await channel.send({ embeds: [embed], components: [row1, row2, row3], files: [banner.attachment] })
 
     await interaction.reply({
       content: `✅ Painel principal criado no canal <#${config.channels.painelInfo}>!`,

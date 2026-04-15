@@ -53,6 +53,7 @@ const typeMap = {
   recrutamento: 'rec',
   duvidas: 'duv',
   donater: 'dnt',
+  item_misterioso: 'mst',
 }
 
 const iconMap = {
@@ -61,6 +62,7 @@ const iconMap = {
   rec: '🎫',
   duv: '📁',
   dnt: '✨',
+  mst: '🎲',
 }
 
 function canUseTicketButtons(member) {
@@ -113,6 +115,8 @@ function getExtraRolesForTipo(sigla) {
   if (sigla === 'duv') return [config.permissions.staff]
   // Donater: staff geral
   if (sigla === 'dnt') return [config.permissions.staff]
+  // Item Misterioso: usuários autorizados (IDs individuais, não roles)
+  if (sigla === 'mst') return config.itemMisterioso.authorizedUsers
   return []
 }
 
@@ -126,6 +130,7 @@ function getTicketTypeFromName(channelName) {
   if (sigla === 'rec') return 'Recrutamento'
   if (sigla === 'duv') return 'Dúvidas'
   if (sigla === 'dnt') return 'Donater'
+  if (sigla === 'mst') return 'Item Misterioso'
   return 'Desconhecido'
 }
 
@@ -168,7 +173,7 @@ module.exports = {
   name: Events.InteractionCreate,
   async execute(interaction) {
     if (interaction.deferred || interaction.replied) return
-    const transcriptsPath = '/var/www/transcripts'
+    const transcriptsPath = path.join(__dirname, '..', 'transcripts')
     if (!fs.existsSync(transcriptsPath)) {
       fs.mkdirSync(transcriptsPath, { recursive: true })
     }
@@ -178,6 +183,7 @@ module.exports = {
       'ticket_recrutamento',
       'ticket_duvidas',
       'ticket_donater',
+      'ticket_item_misterioso',
     ]
     if (
       interaction.isButton() &&
@@ -688,9 +694,9 @@ module.exports = {
         }
         await interaction.editReply({
           content:
-            '✅ Ticket finalizado com sucesso. O canal será fechado em 5 segundos...',
+            '✅ Ticket finalizado com sucesso. O canal será fechado em 2 segundos...',
         })
-        setTimeout(() => channel.delete().catch(() => {}), 5000)
+        setTimeout(() => channel.delete().catch(() => {}), 2000)
       }
       return
     }

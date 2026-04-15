@@ -30,6 +30,7 @@ module.exports = {
         setagemAprovacao: '1477408728465801314',     // Aprovação de setagem
         tickets: '1477408728884969655',              // Embed tickets / recurso corregedoria
         promocaoLog: '1477408729103335438',          // Log promoções/rebaixamentos
+        relatorioPatrulha: '1477408728679714896',     // Relatório de patrulha (xlsx)
         identificacaoLog: '1477408729103335444',     // Log identificação (fotos)
         identificacaoResumo: '1477408728679714904', // Resumo: sem identificação + expiradas
         cursoComprovantes: '1482106954640920636',  // Revisão comprovantes de curso
@@ -52,6 +53,7 @@ module.exports = {
         promocao: '1477473908402946129',    // Log promoções
         corregedoria: '1477473908587233434', // Log advertências/exonerações
         cursoMAA: '1481839491030454424',       // Log resultados curso MAA
+        pontoMerryWeather: '1493298297073569902', // Log toggle/patrulha MerryWeather
     },
 
     // ==================== CATEGORIAS ====================
@@ -63,22 +65,22 @@ module.exports = {
 
     // ==================== CARGOS DE PATENTE (ordem: CMD -> EST) ====================
     ranks: {
-        CMD:    { roleId: '1477408727295463437', tag: '[CMD]',   name: 'Comandante' },
-        SCMD:   { roleId: '1477408727295463436', tag: '[SCMD]',  name: 'Subcomandante' },
-        HC:     { roleId: '1477408727295463435', tag: '[H.C]',   name: 'Alto Comando' },
-        IC:     { roleId: '1477408727270166606', tag: '[I.C]',   name: 'Controle Interno' },
-        AE:     { roleId: '1477408727270166608', tag: '[A.E]',   name: 'Alto Escalão' },
+        CMD:    { roleId: '1477408727295463437', tag: '[CMD]',   name: 'Commander' },
+        SCMD:   { roleId: '1477408727295463436', tag: '[SCMD]',  name: 'Sub Commander' },
+        HC:     { roleId: '1477408727295463435', tag: '[H.C]',   name: 'High Command' },
+        SC:     { roleId: '1477408727270166608', tag: '[S.C]',   name: 'Senior Command' },
+        IA:     { roleId: '1477408727270166606', tag: '[I.A]',   name: 'Internal Affairs' },
         COR:    { roleId: '1477408727244996735', tag: '[COR]',   name: 'Coronel' },
         TCOR:   { roleId: '1477408727244996734', tag: '[T-COR]', name: 'Tenente Coronel' },
         MAJ:    { roleId: '1477408727244996733', tag: '[MAJ]',   name: 'Major' },
         CAP:    { roleId: '1477408727244996732', tag: '[CAP]',   name: 'Capitão' },
-        '1TEN': { roleId: '1477408727244996731', tag: '[1TEN]',  name: '1º Tenente' },
-        '2TEN': { roleId: '1477408727244996730', tag: '[2TEN]',  name: '2º Tenente' },
+        '1TEN': { roleId: '1477408727244996731', tag: '[1TEN]',  name: 'Primeiro Tenente' },
+        '2TEN': { roleId: '1477408727244996730', tag: '[2TEN]',  name: 'Segundo Tenente' },
         ASP:    { roleId: '1477408727244996729', tag: '[ASP]',   name: 'Aspirante' },
         STEN:   { roleId: '1477408727244996728', tag: '[S-TEN]', name: 'Subtenente' },
-        '1SGT': { roleId: '1477408727236874249', tag: '[1SGT]',  name: '1º Sargento' },
-        '2SGT': { roleId: '1477408727236874248', tag: '[2SGT]',  name: '2º Sargento' },
-        '3SGT': { roleId: '1477408727236874247', tag: '[3SGT]',  name: '3º Sargento' },
+        '1SGT': { roleId: '1477408727236874249', tag: '[1SGT]',  name: 'Primeiro Sargento' },
+        '2SGT': { roleId: '1477408727236874248', tag: '[2SGT]',  name: 'Segundo Sargento' },
+        '3SGT': { roleId: '1477408727236874247', tag: '[3SGT]',  name: 'Terceiro Sargento' },
         CB:     { roleId: '1477408727236874246', tag: '[CB]',    name: 'Cabo' },
         SD:     { roleId: '1477408727236874245', tag: '[SD]',    name: 'Soldado' },
         EST:    { roleId: '1477408727236874244', tag: '[EST]',   name: 'Estagiário' },
@@ -86,7 +88,7 @@ module.exports = {
 
     // Array ordenado de patentes (maior -> menor) para promoção/rebaixamento
     rankOrder: [
-        'CMD', 'SCMD', 'HC', 'AE', 'IC', 'COR', 'TCOR', 'MAJ', 'CAP',
+        'CMD', 'SCMD', 'HC', 'SC', 'IA', 'COR', 'TCOR', 'MAJ', 'CAP',
         '1TEN', '2TEN', 'ASP', 'STEN', '1SGT', '2SGT', '3SGT', 'CB', 'SD', 'EST'
     ],
 
@@ -165,6 +167,13 @@ module.exports = {
             '1482112997634605106',  // Instrutor 2
             '1477408727165308969',  // Instrutor 3
         ],
+        maaExempt: [
+            '1477408727270166606',  // I.A
+            '1477408727270166608',  // S.C
+            '1477408727295463435',  // H.C
+            '1477408727295463436',  // SCMD
+            '1477408727295463437',  // CMD
+        ],
     },
 
     // ==================== TICKET TYPES ====================
@@ -211,8 +220,41 @@ module.exports = {
         roleAprovado: '1477408727119298809',
         siteUrl: 'https://www.canva.com/design/DAHDejNVO_U/EaLh113GjBVF9rW41sEW0Q/edit',
         totalPerguntas: 28,
-        acertosNecessarios: 22,
+        acertosNecessarios: 25,
         tempoLimiteMs: 30 * 60 * 1000,  // 30 minutos
+    },
+
+    // ==================== ITEM MISTERIOSO ====================
+    itemMisterioso: {
+        authorizedUsers: [
+            '670897303787405325',
+            '334697727659081728',
+            '870741609828991007',
+            '1075964560542015548',
+        ],
+        purchaseRoleId: '1482541452671058022',
+        resultados: [
+            { emoji: '🎭', nome: '/PD de Personagem', roleId: '1481867956899025099', peso: 10 },
+            { emoji: '⬆️', nome: 'Up de Patente', roleId: '1481867012882956381', peso: 10 },
+            { emoji: '⬇️', nome: 'Rebaixamento', roleId: '1481867809301594296', peso: 10 },
+            { emoji: '⚠️', nome: 'Advertência', roleId: '1481867457231847436', peso: 10 },
+            { emoji: '👟', nome: 'Descalço (1 semana)', roleId: '1481867863932276857', peso: 10 },
+            { emoji: '🏷️', nome: 'Criar Cargo', roleId: '1481868045495566366', peso: 10 },
+            { emoji: '⭐', nome: 'Prioridade em Ações (1 dia)', roleId: '1481868123488522260', peso: 10 },
+            { emoji: '💀', nome: 'Nada aconteceu, Loser!', roleId: '1482604127531044965', peso: 20 },
+            { emoji: '📉', nome: 'Rebaixamento Temporário', roleId: '1482600443694547018', peso: 15 },
+            { emoji: '🏷️', nome: 'Obrigado a usar apelido 24h', roleId: '1482600459569991763', peso: 13 },
+            { emoji: '🚫', nome: 'Proibido PTR 1 hora', roleId: '1482600476372500550', peso: 10 },
+            { emoji: '💸', nome: 'Multa interna de pontos', roleId: '1482600490016702596', peso: 20 },
+            { emoji: '🔍', nome: 'Investigação interna', roleId: '1482600507662143614', peso: 8 },
+            { emoji: '📝', nome: 'Aplicar apelido 24h', roleId: '1482600525202591817', peso: 12 },
+            { emoji: '✏️', nome: 'Escolha de Apelido 24h', roleId: '1482600553560408076', peso: 15 },
+            { emoji: '📊', nome: '-50% na próxima rodada', roleId: '1482600960491520010', peso: 20 },
+            { emoji: '🛡️', nome: 'Ignorar 1 obrigação interna', roleId: '1482600977843355750', peso: 5 },
+            { emoji: '🚗', nome: 'Escolha de VTR 1x', roleId: '1482601000899707002', peso: 20 },
+            { emoji: '🚙', nome: 'VTR exclusiva 3 dias', roleId: '1482601017966067722', peso: 10 },
+            { emoji: '👔', nome: 'Farda exclusiva 1 semana', roleId: '1482601041508831242', peso: 3 },
+        ],
     },
 
     // ==================== BRANDING ====================
@@ -222,7 +264,8 @@ module.exports = {
         hierarchyTitle: 'HIERARQUIA GENESIS POLICE',
         color: '#1E90FF',
         footerText: 'Genesis Police',
-        bannerUrl: 'https://cdn.discordapp.com/attachments/1477408728679714896/1481818996398620844/banner.png?ex=69b4b2fb&is=69b3617b&hm=dd813801249ac5e36b073e4a52e7154c30c543b92aabab9d4b2aba113b6a3ab3&',
+        bannerPath: './assets/banner.png',
+        perfilPath: './assets/perfil.png',
     },
 
     // ==================== ARSENAL (itens proibidos por patente) ====================
@@ -240,4 +283,49 @@ module.exports = {
 
     // ==================== OWNER ====================
     ownerId: '233987539264995328',
+
+    // ==================== BATALHÕES ====================
+    // Servidores externos de batalhão com sincronização ao servidor principal
+    battalions: [
+        {
+            guildId: '1481606531160997953',
+            channelId: '1481606532184670261',
+            approvalChannelId: '1481718192782184658',
+            roleIds: ['1481718994229661868', '1481722975559356446'],
+            roleName: 'S.W.A.T',
+            mainRoleId: '1481720985743921455',
+            imagePath: './assets/swat.png',
+        },
+        {
+            guildId: '1483574861866602756',
+            channelId: '1483574862747275406',
+            approvalChannelId: '1483574862747275408',
+            roleIds: ['1483574861866602757', '1483574861866602762'],
+            roleName: 'S.O.G',
+            mainRoleId: '1477408727253647556',
+            imagePath: './assets/sog.png',
+        },
+        {
+            guildId: '1483575520577720502',
+            channelId: '1483575521009991818',
+            approvalChannelId: '1483575521009991820',
+            roleIds: ['1483575520577720508', '1483575520577720509'],
+            roleName: 'S.T.E',
+            mainRoleId: '1477408727253647555',
+            imagePath: './assets/ste.png',
+            visitorRoleId: '1483575520577720506',
+            nickTag: '[STE-R]',
+        },
+        {
+            guildId: '1474523272732344390',
+            channelId: '1474523278373556256',
+            approvalChannelId: '1483599311068463205',
+            roleIds: ['1474523272732344397', '1477521710218477588'],
+            roleName: 'MerryWeather',
+            mainRoleId: '1477408727253647557',
+            imagePath: './assets/merryweather_banner.gif',
+            thumbnailPath: './assets/merryweather_thumbnail.webp',
+            fotoPath: './assets/merryweather_foto.png',
+        },
+    ],
 };

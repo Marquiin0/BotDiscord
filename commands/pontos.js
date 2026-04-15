@@ -15,10 +15,10 @@ module.exports = {
             .setRequired(true)),
   async execute(interaction) {
     // IDs autorizados para uso
-    const allowedUserIds = ['334697727659081728', '670897303787405325'];
+    const allowedUserIds = ['334697727659081728', '670897303787405325', '870741609828991007', '1075964560542015548'];
     
     // Verifica se o usuário que executou o comando é administrador e está na lista autorizada
-    if (!interaction.member.permissions.has('ADMINISTRATOR') || !allowedUserIds.includes(interaction.user.id)) {
+    if (!allowedUserIds.includes(interaction.user.id)) {
       return interaction.reply({ content: 'Você não tem permissão para executar este comando.', flags: MessageFlags.Ephemeral });
     }
 

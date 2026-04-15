@@ -1,11 +1,13 @@
 const {
   SlashCommandBuilder,
   EmbedBuilder,
+  AttachmentBuilder,
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
   MessageFlags,
 } = require('discord.js')
+const fs = require('fs')
 const { Warning, Identificacao, PromotionRecords, ActionReports, PrisonReports, ApreensaoReports, PatrolHours, QuizResult, MemberID } = require('../database')
 const { Op } = require('sequelize')
 const config = require('../config')
@@ -96,8 +98,22 @@ module.exports = {
       .setFooter({ text: config.branding.footerText })
       .setTimestamp()
 
+    const files = []
     if (identification && identification.fotoUrl) {
-      embed.setImage(identification.fotoUrl)
+      const fotoPath = identification.fotoUrl
+      if (!fotoPath.startsWith('http') && fs.existsSync(fotoPath)) {
+        const file = new AttachmentBuilder(fotoPath, { name: 'identificacao.png' })
+        files.push(file)
+        embed.setImage('attachment://identificacao.png')
+      } else if (fotoPath.startsWith('http')) {
+        try {
+          const file = new AttachmentBuilder(fotoPath, { name: 'identificacao.png' })
+          files.push(file)
+          embed.setImage('attachment://identificacao.png')
+        } catch {
+          embed.setImage(fotoPath)
+        }
+      }
     }
 
     const row1 = new ActionRowBuilder().addComponents(
@@ -129,6 +145,7 @@ module.exports = {
     await interaction.editReply({
       embeds: [embed],
       components: [row1, row2],
+      files,
     })
   },
 }

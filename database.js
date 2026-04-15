@@ -1,23 +1,16 @@
 const { Sequelize, DataTypes } = require('sequelize');
 require('dotenv').config();
 
-const sequelize = new Sequelize(
-    process.env.DB_NAME,
-    process.env.DB_USER,
-    process.env.DB_PASSWORD,
-    {
-        host: process.env.DB_HOST,
-        port: process.env.DB_PORT,
-        dialect: 'postgres',
-        dialectOptions: {
-            ssl: {
-                require: true,
-                rejectUnauthorized: false,
-            },
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
+    dialect: 'postgres',
+    dialectOptions: {
+        ssl: {
+            require: true,
+            rejectUnauthorized: false,
         },
-        logging: false,
-    }
-);
+    },
+    logging: false,
+});
 
 
 
@@ -153,6 +146,47 @@ const PatrolHours = sequelize.define('PatrolHours', {
     },
     lastEntry: { type: DataTypes.DATE, allowNull: true } // Novo campo para armazenar a última entrada
 
+});
+
+const PatrolSession = sequelize.define('PatrolSession', {
+    inGameId: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
+    discordId: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    memberName: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
+    entryTime: {
+        type: DataTypes.DATE,
+        allowNull: false,
+    },
+    exitTime: {
+        type: DataTypes.DATE,
+        allowNull: true,
+    },
+    duration: {
+        type: DataTypes.FLOAT,
+        allowNull: true,
+    },
+    source: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: 'genesis',
+    },
+    weekStart: {
+        type: DataTypes.DATE,
+        allowNull: false,
+    },
+    nextCheckAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+        defaultValue: null,
+    },
 });
 
 const UserLog = sequelize.define('UserLog', {
@@ -660,8 +694,8 @@ const Identificacao = sequelize.define('Identificacao', {
       allowNull: false,
     },
     status: {
-        type: DataTypes.ENUM('ativo', 'inativo'),
-        defaultValue: 'ativo', // ou 'inativo', se preferir
+        type: DataTypes.STRING,
+        defaultValue: 'ativo',
         allowNull: false
       },
        messageId: {
@@ -736,7 +770,7 @@ const VictoryDefeat = sequelize.define('VictoryDefeat', {
         allowNull: false,
     },
     type: {
-        type: DataTypes.ENUM('vitoria', 'derrota'),
+        type: DataTypes.STRING,
         allowNull: false,
     },
     actionName: {
@@ -812,6 +846,7 @@ WeaponLog.sync();
 UserPoints.sync()
 WeeklyPoints.sync()
 Ausencia.sync()
+PatrolSession.sync()
 
 module.exports = {
     UserPoints,
@@ -848,6 +883,7 @@ module.exports = {
     VictoryDefeat,
     ArsenalProcessedLog,
     ArsenalIsento,
+    PatrolSession,
 };
 
 

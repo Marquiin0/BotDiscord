@@ -12,8 +12,11 @@ const {
   notifyExpiredIdentifications,
   alertStaffExpiredIdentifications,
   reportIdentificationStatus,
+  reportMAAStatus,
 } = require('../utils/identificationExpiryUtils')
 const { startDonationChecks } = require('../utils/donationScheduler')
+const { generateWeeklyPatrolReport } = require('../utils/weeklyPatrolReport')
+const { checkLongPatrolSessions } = require('../utils/patrolSessionCheck')
 const { Op } = require('sequelize')
 const { EmbedBuilder } = require('discord.js')
 
@@ -168,9 +171,6 @@ module.exports = {
     }
     setInterval(executePatrolPeriodically, 21600000)
 
-    // Verifica advertências expiradas
-    checkExpiredWarnings(client)
-
     // Leaderboard update
     startLeaderboardUpdate(client)
 
@@ -179,10 +179,15 @@ module.exports = {
       await notifyExpiredIdentifications(client)
     }, 21600000)
 
-    // Relatório identificação a cada 2h
+    // Relatório identificação 1x por dia (24h)
     setInterval(async () => {
       await reportIdentificationStatus(client)
-    }, 7200000)
+    }, 86400000)
+
+    // Relatório oficiais sem curso MAA 1x por dia (24h)
+    setInterval(async () => {
+      await reportMAAStatus(client)
+    }, 86400000)
 
     // Advertências expiradas (check frequente)
     setInterval(() => {
@@ -199,6 +204,9 @@ module.exports = {
       closeExpiredBetsOnReady(client)
     }, 60000)
 
+    // Verificação de sessões de patrulha longas (DM após 3h)
+    setInterval(() => checkLongPatrolSessions(client), 5 * 60 * 1000)
+
     // Atualiza BD de IDs a cada 15min
     setInterval(async () => {
       const guild = client.guilds.cache.get(config.guilds.main)
@@ -214,6 +222,24 @@ module.exports = {
         await updateHierarchy(guild, config.channels.hierarquia)
       }
     }, 300000) // 5 minutos
+
+    // Relatório semanal de patrulha (domingo 00:00 São Paulo)
+    let lastPatrolReportWeek = null
+    setInterval(async () => {
+      const moment = require('moment-timezone')
+      const now = moment().tz('America/Sao_Paulo')
+      const weekId = now.format('YYYY-WW')
+
+      if (now.day() === 0 && now.hour() === 0 && now.minute() < 5 && lastPatrolReportWeek !== weekId) {
+        lastPatrolReportWeek = weekId
+        try {
+          await generateWeeklyPatrolReport(client)
+          console.log('[WeeklyPatrol] Relatório semanal gerado com sucesso.')
+        } catch (err) {
+          console.error('[WeeklyPatrol] Erro ao gerar relatório semanal:', err)
+        }
+      }
+    }, 60000) // Verifica a cada 1 minuto
 
     // Chama a função que apaga automaticamente canais "registro-"
     deleteProvaChannels(client)
