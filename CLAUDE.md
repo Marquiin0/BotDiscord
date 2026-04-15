@@ -6,7 +6,8 @@ Bot Discord para a organização **Genesis Police**, construído com discord.js 
 ## Tech Stack
 - **Runtime:** Node.js
 - **Framework:** discord.js v14
-- **Database:** PostgreSQL via Sequelize + Supabase (connection string em `DATABASE_URL` no `.env`)
+- **Database:** PostgreSQL via Sequelize + Neon (connection string em `DATABASE_URL` no `.env`)
+- **Hosting:** Discloud (plano Diamond)
 - **Config:** dotenv (`.env`) + `config.js` centralizado
 
 ## Project Structure
@@ -57,8 +58,20 @@ CMD > SCMD > H.C > I.C > COR > T-COR > MAJ > CAP > 1TEN > 2TEN > ASP > S-TEN > 1
 ## Running
 ```bash
 node deploy-commands.js   # Registrar/atualizar slash commands
-node index.js             # Iniciar o bot
+node index.js             # Iniciar o bot localmente
 ```
+
+## Deploy (Discloud)
+Ao finalizar alterações, **SEMPRE** rodar o script de deploy para atualizar o bot na Discloud:
+```bash
+node deploy.js "descrição das alterações"
+```
+Este comando faz automaticamente:
+1. `git add` + `git commit` + `git push` para o GitHub
+2. Gera zip otimizado (sem node_modules/assets/attachments)
+3. Faz upload e deploy na Discloud via API
+
+**IMPORTANTE:** Sempre usar `node deploy.js` ao invés de commit/push manual. Isso garante que a Discloud é atualizada junto.
 
 ## Git & Colaboração
 - **Repositório:** https://github.com/Marquiin0/BotDiscord.git
@@ -94,4 +107,5 @@ node index.js             # Iniciar o bot
 - Guild de logs: `config.guilds.logs`
 - O bot opera em duas guilds simultaneamente (principal + logs).
 - Após alterar commands, rodar `deploy-commands.js` antes de reiniciar.
-- Deletar `database.sqlite` reseta todos os dados.
+- O banco de dados é PostgreSQL no **Neon** (neon.tech) — dados persistem independente da Discloud.
+- O `deploy.js` contém o token da API Discloud e o APP_ID para deploy automático.
