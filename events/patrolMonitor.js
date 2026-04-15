@@ -2,6 +2,21 @@ const { PatrolSession, MemberID } = require('../database')
 const config = require('../config')
 const moment = require('moment-timezone')
 
+// Cache de membros da guild para evitar guild.members.fetch() a cada toggle
+let membersCache = null
+let membersCacheTime = 0
+const CACHE_TTL = 5 * 60 * 1000 // 5 minutos
+
+async function getCachedMembers(guild) {
+  const now = Date.now()
+  if (membersCache && (now - membersCacheTime) < CACHE_TTL) {
+    return membersCache
+  }
+  membersCache = await guild.members.fetch()
+  membersCacheTime = now
+  return membersCache
+}
+
 /**
  * Calcula o domingo 00:00 (São Paulo) da semana atual.
  */
@@ -53,7 +68,7 @@ module.exports = {
         const guild = message.client.guilds.cache.get(config.guilds.main)
         if (guild) {
           try {
-            const allMembers = await guild.members.fetch()
+            const allMembers = await getCachedMembers(guild)
             const found = allMembers.find(m => {
               const idMatch = m.displayName.match(/\|\s*(\d+)/)
               return idMatch && idMatch[1] === inGameId
