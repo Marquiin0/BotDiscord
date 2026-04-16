@@ -184,7 +184,14 @@ module.exports = {
             '1477408727295463436',  // SCMD
             '1477408727295463437',  // CMD
         ],
+        // HC+ = H.C, SCMD, CMD (para comandos de alto nível)
+        hcPlus: [
+            '1477408727295463435',  // H.C
+            '1477408727295463436',  // SCMD
+            '1477408727295463437',  // CMD
+        ],
         // Limite de promoção/rebaixamento por cargo
+        // CMD e SCMD não tem limite (admin)
         promotionLimits: {
             '1477408727270166607': 'MAJ',   // R.H pode promover até Major
             '1477408727270166606': 'MAJ',   // I.A pode promover até Major

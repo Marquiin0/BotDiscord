@@ -6,7 +6,7 @@ module.exports = {
         .setName('idspatente')
         .setDescription('Lista os IDs dos membros agrupados por patente.'),
     async execute(interaction) {
-        if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+        if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator) && !interaction.member.roles.cache.hasAny(...config.permissions.hcPlus)) {
             return interaction.reply({
                 content: '❌ Você não tem permissão para usar este comando.',
                 flags: MessageFlags.Ephemeral,

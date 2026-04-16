@@ -30,7 +30,7 @@ module.exports = {
         ),
 
     async execute(interaction) {
-        if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+        if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator) && !interaction.member.roles.cache.hasAny(...config.permissions.hcPlus)) {
             return interaction.reply({
                 content: '❌ Você precisa ser administrador para usar este comando.',
                 flags: MessageFlags.Ephemeral,

@@ -33,7 +33,7 @@ module.exports = {
     // Permite o comando para administradores ou para usuários que possuam permissão
     if (
       !interaction.member.permissions.has(PermissionsBitField.Flags.Administrator) &&
-      !interaction.memberPermissions.has(PermissionsBitField.Flags.UseApplicationCommands)
+      !interaction.member.roles.cache.hasAny(...config.permissions.hcPlus)
     ) {
       return interaction.reply({
         content: '❌ Você não tem permissão.',

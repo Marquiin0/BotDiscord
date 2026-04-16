@@ -6,7 +6,7 @@ module.exports = {
         .setName('exportar-ids')
         .setDescription('Exporta os IDs dos membros no formato "ID_JOGO" "ID_DISCORD".'),
     async execute(interaction) {
-        if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+        if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator) && !interaction.member.roles.cache.hasAny(...config.permissions.hcPlus)) {
             return interaction.reply({
                 content: '❌ Você não tem permissão para usar este comando.',
                 flags: MessageFlags.Ephemeral,

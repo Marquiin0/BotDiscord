@@ -15,7 +15,6 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName('sorteio')
     .setDescription('Inicia um sorteio')
-    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .addStringOption(option =>
       option
         .setName('nome')
@@ -48,6 +47,12 @@ module.exports = {
     ),
 
   async execute(interaction) {
+    if (
+      !interaction.member.permissions.has(PermissionFlagsBits.Administrator) &&
+      !interaction.member.roles.cache.hasAny(...config.permissions.hcPlus)
+    ) {
+      return interaction.reply({ content: '❌ Você não tem permissão.', flags: 64 })
+    }
     const nome = interaction.options.getString('nome')
     const data = interaction.options.getString('data') // formato: DD/MM/AAAA
     const horario = interaction.options.getString('horario') // formato: HH:MM
