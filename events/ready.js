@@ -1,4 +1,5 @@
 const config = require('../config')
+const schedule = require('node-schedule')
 const checkExpiredWarnings = require('../utils/checkExpiredWarnings')
 const checkExpiredLoja = require('../utils/checkExpiredLoja')
 const { Warning } = require('../database')
@@ -179,15 +180,12 @@ module.exports = {
       await notifyExpiredIdentifications(client)
     }, 21600000)
 
-    // Relatório identificação 1x por dia (24h)
-    setInterval(async () => {
+    // Relatório identificação + MAA todo dia às 18h (horário Brasília = 21h UTC)
+    schedule.scheduleJob({ hour: 21, minute: 0, tz: 'America/Sao_Paulo' }, async () => {
+      console.log('[SCHEDULE] Enviando relatórios de identificação e MAA (18h)')
       await reportIdentificationStatus(client)
-    }, 86400000)
-
-    // Relatório oficiais sem curso MAA 1x por dia (24h)
-    setInterval(async () => {
       await reportMAAStatus(client)
-    }, 86400000)
+    })
 
     // Advertências expiradas (check frequente)
     setInterval(() => {

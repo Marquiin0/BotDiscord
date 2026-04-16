@@ -268,7 +268,13 @@ async function reportIdentificationStatus(client) {
   }
 
   guild.members.cache.forEach(member => {
-    if (!member.roles.cache.has(config.roles.recruta)) return
+    if (member.user.bot) return
+    // Verifica se tem alguma patente da corporação
+    const temPatente = config.rankOrder.some(key => member.roles.cache.has(config.ranks[key].roleId))
+    if (!temPatente) return
+    // Pula se é CMD ou SCMD (isentos)
+    if (exemptRoles.some(r => member.roles.cache.has(r))) return
+    // Se não tem cargo identificado OU tem cargo sem identificação
     const temIdentificado = member.roles.cache.has(config.roles.identificado)
     const temNaoIdentificado = member.roles.cache.has(config.roles.naoIdentificado)
     if (!temIdentificado || temNaoIdentificado) {
@@ -347,13 +353,18 @@ async function reportMAAStatus(client) {
     }
   }
 
-  const exemptRoles = config.permissions.maaExempt
+  // Isentos: CMD e SCMD não precisam de MAA
+  const exemptRoles = [config.ranks.CMD.roleId, config.ranks.SCMD.roleId]
   const semMAA = []
 
   guild.members.cache.forEach(member => {
     if (member.user.bot) return
-    if (!member.roles.cache.has(config.roles.recruta)) return
-    if (member.roles.cache.has(config.roles.maaAprovado)) return
+    // Verifica se tem alguma patente da corporação
+    const temPatente = config.rankOrder.some(key => member.roles.cache.has(config.ranks[key].roleId))
+    if (!temPatente) return
+    // Pula se já tem MAA aprovado
+    if (member.roles.cache.has(config.cursoMAA.roleAprovado)) return
+    // Pula se é CMD ou SCMD
     if (exemptRoles.some(r => member.roles.cache.has(r))) return
     semMAA.push(member.id)
   })
