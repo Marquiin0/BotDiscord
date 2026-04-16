@@ -39,6 +39,7 @@ module.exports = {
         bet: '1481838121992720457',                  // Canal de apostas
         arsenalAlerta: '1477408728679714903',        // Alertas de infrações do arsenal
         saidaAlerta: '1477408728679714904',          // Alertas de saída (saiu da org / saiu do servidor)
+        requisitos: '1494363413873299746',             // Canal de requisitos de promoção
     },
 
     // ==================== CANAIS (Servidor de Logs) ====================
@@ -222,6 +223,58 @@ module.exports = {
         totalPerguntas: 28,
         acertosNecessarios: 25,
         tempoLimiteMs: 30 * 60 * 1000,  // 30 minutos
+    },
+
+    // ==================== CURSOS DE AÇÃO (role IDs) ====================
+    actionCourseRoles: [
+        '1494359171422752860', // HyperMercado
+        '1494359165391601704', // Teatro
+        '1494359121057681489', // Lojinha
+        '1494359127508389888', // Ammunation
+        '1494359132935946321', // Yellowjack
+        '1494359145338376293', // Mcdonalds
+        '1494359139512750170', // Comedy
+        '1494357815882551316', // AeroPorto Abandonado
+        '1494357833536376922', // Joalheria
+        '1494359151596408923', // Barbearia
+        '1494357827945238629', // Porto
+        '1494359159666114620', // Bebidas
+        '1494357821955772567', // Trevos
+        '1494357810434015434', // Açougue
+        '1494357783628353606', // Fleeca
+        '1494357793594146970', // Clube Praia
+        '1494356761921196234', // Porta Aviões
+        '1494356778685562890', // Banco Paleto
+        '1494357799843401960', // Cinema
+        '1494357805459705926', // Observatorio
+        '1494356769172885595', // Niobio
+        '1494356569780125806', // Banco Central
+        '1494356754555994333', // Galinheiro
+    ],
+
+    // ==================== REDUÇÃO DE DIAS (itens da loja) ====================
+    promotionDayReductions: {
+        '1477408727215898737': 3,   // -3 dias promoção
+        '1477408727215898736': 5,   // -5 dias promoção
+        '1477408727215898735': 10,  // -10 dias promoção
+        '1477408727203053718': 15,  // -15 dias promoção (Premium)
+    },
+
+    // ==================== REQUISITOS DE PROMOÇÃO ====================
+    promotionRequirements: {
+        EST:    { nextRank: 'SD',   label: 'EST → SD',     cursoMAA: true,  apreensaoAcao: 10,  prisao: 5,  horasPatrulha: 0,  cursosAcao: 0,  semAdvertencia: false, dias: 5 },
+        SD:     { nextRank: 'CB',   label: 'SD → CB',      cursoMAA: false, apreensaoAcao: 15,  prisao: 8,  horasPatrulha: 10, cursosAcao: 0,  semAdvertencia: false, dias: 7 },
+        CB:     { nextRank: '3SGT', label: 'CB → 3SGT',    cursoMAA: false, apreensaoAcao: 20,  prisao: 12, horasPatrulha: 15, cursosAcao: 2,  semAdvertencia: false, dias: 10 },
+        '3SGT': { nextRank: '2SGT', label: '3SGT → 2SGT',  cursoMAA: false, apreensaoAcao: 30,  prisao: 18, horasPatrulha: 25, cursosAcao: 4,  semAdvertencia: true,  dias: 14 },
+        '2SGT': { nextRank: '1SGT', label: '2SGT → 1SGT',  cursoMAA: false, apreensaoAcao: 40,  prisao: 22, horasPatrulha: 35, cursosAcao: 6,  semAdvertencia: true,  dias: 16 },
+        '1SGT': { nextRank: 'STEN', label: '1SGT → S-TEN', cursoMAA: false, apreensaoAcao: 50,  prisao: 28, horasPatrulha: 45, cursosAcao: 8,  semAdvertencia: true,  dias: 18 },
+        STEN:   { nextRank: 'ASP',  label: 'S-TEN → ASP',  cursoMAA: false, apreensaoAcao: 60,  prisao: 32, horasPatrulha: 50, cursosAcao: 10, semAdvertencia: true,  dias: 25 },
+        ASP:    { nextRank: '2TEN', label: 'ASP → 2TEN',   cursoMAA: false, apreensaoAcao: 70,  prisao: 38, horasPatrulha: 60, cursosAcao: 13, semAdvertencia: true,  dias: 30 },
+        '2TEN': { nextRank: '1TEN', label: '2TEN → 1TEN',  cursoMAA: false, apreensaoAcao: 80,  prisao: 42, horasPatrulha: 70, cursosAcao: 16, semAdvertencia: true,  dias: 35 },
+        '1TEN': { nextRank: 'CAP',  label: '1TEN → CAP',   cursoMAA: false, apreensaoAcao: 90,  prisao: 48, horasPatrulha: 80, cursosAcao: 19, semAdvertencia: true,  dias: 40 },
+        CAP:    { nextRank: 'MAJ',  label: 'CAP → MAJ',    cursoMAA: false, apreensaoAcao: 100, prisao: 55, horasPatrulha: 90, cursosAcao: 23, semAdvertencia: true,  dias: 45 },
+        MAJ:    { nextRank: 'TCOR', label: 'MAJ → T-COR',  indicacao: true, dias: 30 },
+        TCOR:   { nextRank: 'COR',  label: 'T-COR → COR',  indicacao: true, dias: 30 },
     },
 
     // ==================== ITEM MISTERIOSO ====================

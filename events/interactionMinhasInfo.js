@@ -15,6 +15,7 @@ const {
   Identificacao,
   QuizResult,
   MemberID,
+  Warning,
 } = require('../database')
 const config = require('../config')
 const moment = require('moment-timezone')
@@ -100,6 +101,52 @@ async function showUserInfo(interaction, targetUserId, ephemeral = true) {
       },
     })
 
+    // Contagem de participações em apreensões
+    const apreensaoParticipations = await ApreensaoReports.count({
+      where: {
+        participants: { [Op.like]: `%${targetUserId}%` },
+      },
+    })
+
+    // Contagem de participações em prisões
+    const prisonParticipations = await PrisonReports.count({
+      where: {
+        participants: { [Op.like]: `%${targetUserId}%` },
+      },
+    })
+
+    // Horas acumuladas desde última promoção
+    const lastPromotionDate = promotionRecord && promotionRecord.lastPromotionDate
+      ? new Date(promotionRecord.lastPromotionDate)
+      : member.joinedAt || new Date(0)
+
+    const accumulatedData = await PatrolSession.findOne({
+      attributes: [
+        [Sequelize.fn('COALESCE', Sequelize.fn('SUM', Sequelize.col('duration')), 0), 'totalHours']
+      ],
+      where: {
+        discordId: targetUserId,
+        exitTime: { [Op.ne]: null },
+        entryTime: { [Op.gte]: lastPromotionDate },
+      },
+      raw: true,
+    })
+    const accumulatedHours = accumulatedData ? parseFloat(accumulatedData.totalHours) : 0
+
+    // Contagem de cursos de ação completados
+    const actionCourseCount = config.actionCourseRoles.filter(roleId =>
+      member.roles.cache.has(roleId)
+    ).length
+
+    // Advertências ativas
+    const warningCount = await Warning.count({ where: { userId: targetUserId } })
+
+    // Redução de dias da loja
+    let dayReduction = 0
+    for (const [roleId, days] of Object.entries(config.promotionDayReductions)) {
+      if (member.roles.cache.has(roleId)) dayReduction += days
+    }
+
     // Verifica se tem curso MAA
     const hasCursoMAA = member.roles.cache.has(config.cursoMAA.roleAprovado)
 
@@ -123,10 +170,12 @@ async function showUserInfo(interaction, targetUserId, ephemeral = true) {
 
     // Identifica patente atual
     let currentRank = 'Sem patente'
+    let currentRankKey = null
     for (const key of config.rankOrder) {
       const rank = config.ranks[key]
       if (member.roles.cache.has(rank.roleId)) {
         currentRank = `${rank.tag} ${rank.name}`
+        currentRankKey = key
         break
       }
     }
@@ -160,7 +209,61 @@ async function showUserInfo(interaction, targetUserId, ephemeral = true) {
           inline: true,
         },
       )
-      .setFooter({ text: config.branding.footerText })
+
+    // ═══════════ PROGRESSO DE PROMOÇÃO ═══════════
+    const reqs = currentRankKey ? config.promotionRequirements[currentRankKey] : null
+    if (reqs) {
+      const totalAcaoApreensao = actionCount + actionParticipations + apreensaoCount + apreensaoParticipations
+      const totalPrisao = prisonCount + prisonParticipations
+      const diasNoCargo = Math.floor((Date.now() - lastPromotionDate.getTime()) / (1000 * 60 * 60 * 24))
+
+      if (reqs.indicacao) {
+        // MAJ e TCOR - indicação
+        const diasReq = Math.max(reqs.dias - dayReduction, 0)
+        const diasOk = diasNoCargo >= diasReq ? '✅' : '❌'
+        const reducaoText = dayReduction > 0 ? ` (-${dayReduction} loja)` : ''
+        embed.addFields({
+          name: `📊 Progresso para ${reqs.label.split(' → ')[1]}`,
+          value: `🏛️ Indicação do Alto Comando\n📅 Dias: **${diasNoCargo}/${diasReq}** ${diasOk}${reducaoText}`,
+          inline: false,
+        })
+      } else {
+        const diasReq = Math.max(reqs.dias - dayReduction, 0)
+        const reducaoText = dayReduction > 0 ? ` (-${dayReduction} loja)` : ''
+
+        const acaoOk = totalAcaoApreensao >= reqs.apreensaoAcao ? '✅' : '❌'
+        const prisaoOk = totalPrisao >= reqs.prisao ? '✅' : '❌'
+        const diasOk = diasNoCargo >= diasReq ? '✅' : '❌'
+
+        const lines = []
+        if (reqs.cursoMAA) {
+          lines.push(`📋 Curso MAA: ${hasCursoMAA ? '✅' : '❌'}`)
+        }
+        lines.push(`🔫 Ações/Apreensões: **${totalAcaoApreensao}/${reqs.apreensaoAcao}** ${acaoOk}`)
+        lines.push(`🚔 Prisões: **${totalPrisao}/${reqs.prisao}** ${prisaoOk}`)
+        if (reqs.horasPatrulha > 0) {
+          const horasOk = accumulatedHours >= reqs.horasPatrulha ? '✅' : '❌'
+          lines.push(`⏰ Horas: **${accumulatedHours.toFixed(1)}/${reqs.horasPatrulha}h** ${horasOk}`)
+        }
+        if (reqs.cursosAcao > 0) {
+          const cursosOk = actionCourseCount >= reqs.cursosAcao ? '✅' : '❌'
+          lines.push(`🎓 Cursos Ação: **${actionCourseCount}/${reqs.cursosAcao}** ${cursosOk}`)
+        }
+        if (reqs.semAdvertencia) {
+          const advOk = warningCount === 0 ? '✅' : '❌'
+          lines.push(`⚠️ Advertências: **${warningCount}** ${advOk}`)
+        }
+        lines.push(`📅 Dias: **${diasNoCargo}/${diasReq}** ${diasOk}${reducaoText}`)
+
+        embed.addFields({
+          name: `📊 Progresso para ${reqs.label.split(' → ')[1]}`,
+          value: lines.join('\n'),
+          inline: false,
+        })
+      }
+    }
+
+    embed.setFooter({ text: config.branding.footerText })
       .setTimestamp()
 
     // Adiciona foto de identificação se existir
