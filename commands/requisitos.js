@@ -4,7 +4,9 @@ const {
   PermissionsBitField,
   MessageFlags,
 } = require('discord.js')
+const path = require('path')
 const config = require('../config')
+const { attachImage } = require('../utils/attachImage')
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -30,77 +32,64 @@ module.exports = {
 
     const reqs = config.promotionRequirements
 
-    // Helper para formatar requisitos de uma patente
+    // Formata os requisitos de cada patente em texto compacto
     function formatReqs(key) {
       const req = reqs[key]
-      if (!req) return null
+      if (!req) return ''
       if (req.indicacao) {
-        return `🏛️ Indicação do Alto Comando\n📅 ${req.dias} Dias no cargo`
+        return `> 🏛️ Indicação do Alto Comando\n> 📅 ${req.dias} Dias no cargo`
       }
 
       const lines = []
-      if (req.cursoMAA) lines.push('📋 Curso MAA aprovado')
-      if (req.apreensaoAcao > 0) lines.push(`🔫 ${req.apreensaoAcao} Relatórios de Apreensão/Ação`)
-      if (req.prisao > 0) lines.push(`🚔 ${req.prisao} Relatórios de Prisão`)
-      if (req.horasPatrulha > 0) lines.push(`⏰ ${req.horasPatrulha}h de Patrulha`)
+      if (req.cursoMAA) lines.push('📋 Curso MAA')
+      if (req.apreensaoAcao > 0) lines.push(`🔫 ${req.apreensaoAcao} Rel. Apreensão/Ação`)
+      if (req.prisao > 0) lines.push(`🚔 ${req.prisao} Rel. Prisão`)
+      if (req.horasPatrulha > 0) lines.push(`⏰ ${req.horasPatrulha}h Patrulha`)
       if (req.cursosAcao > 0) lines.push(`🎓 ${req.cursosAcao} Cursos de Ação`)
-      if (req.semAdvertencia) lines.push('⚠️ 0 Advertências ativas')
+      if (req.semAdvertencia) lines.push('⚠️ 0 Advertências')
       lines.push(`📅 ${req.dias} Dias no cargo`)
-      return lines.join('\n')
+      return lines.map(l => `> ${l}`).join('\n')
     }
 
-    // ═══════════ Embed 1: Praças ═══════════
-    const embedPracas = new EmbedBuilder()
-      .setColor('#2ECC71')
-      .setTitle('🎖️ Requisitos de Promoção — Praças')
-      .setDescription('Requisitos necessários para subir de patente nas praças.')
-      .addFields(
-        { name: `━━━ ${reqs.EST.label} ━━━`, value: formatReqs('EST'), inline: false },
-        { name: `━━━ ${reqs.SD.label} ━━━`, value: formatReqs('SD'), inline: false },
-        { name: `━━━ ${reqs.CB.label} ━━━`, value: formatReqs('CB'), inline: false },
+    // Monta a description completa
+    const sections = [
+      '**━━━━━━━━ PRAÇAS ━━━━━━━━**\n',
+      `**🎖️ ${reqs.EST.label}**\n${formatReqs('EST')}\n`,
+      `**🎖️ ${reqs.SD.label}**\n${formatReqs('SD')}\n`,
+      `**🎖️ ${reqs.CB.label}**\n${formatReqs('CB')}\n`,
+
+      '**━━━━━━━ GRADUADOS ━━━━━━━**\n',
+      `**🎖️ ${reqs['3SGT'].label}**\n${formatReqs('3SGT')}\n`,
+      `**🎖️ ${reqs['2SGT'].label}**\n${formatReqs('2SGT')}\n`,
+      `**🎖️ ${reqs['1SGT'].label}**\n${formatReqs('1SGT')}\n`,
+      `**🎖️ ${reqs.STEN.label}**\n${formatReqs('STEN')}\n`,
+
+      '**━━━━━━━ OFICIAIS ━━━━━━━**\n',
+      `**🎖️ ${reqs.ASP.label}**\n${formatReqs('ASP')}\n`,
+      `**🎖️ ${reqs['2TEN'].label}**\n${formatReqs('2TEN')}\n`,
+      `**🎖️ ${reqs['1TEN'].label}**\n${formatReqs('1TEN')}\n`,
+      `**🎖️ ${reqs.CAP.label}**\n${formatReqs('CAP')}\n`,
+
+      '**━━━━━ ALTO COMANDO ━━━━━**\n',
+      `**🎖️ ${reqs.MAJ.label}**\n${formatReqs('MAJ')}\n`,
+      `**🎖️ ${reqs.TCOR.label}**\n${formatReqs('TCOR')}\n`,
+      `**🎖️ COR em diante**\n> 🏛️ Nomeação direta pelo Alto Comando`,
+    ]
+
+    const embed = new EmbedBuilder()
+      .setColor(config.branding.color)
+      .setTitle(`🎖️ ${config.branding.name} - Requisitos de Promoção`)
+      .setDescription(
+        'Confira abaixo os requisitos necessários para subir de patente.\n\n' +
+        sections.join('\n'),
       )
       .setFooter({ text: config.branding.footerText })
-
-    // ═══════════ Embed 2: Graduados ═══════════
-    const embedGraduados = new EmbedBuilder()
-      .setColor('#3498DB')
-      .setTitle('🎖️ Requisitos de Promoção — Graduados')
-      .setDescription('Requisitos necessários para subir de patente nos graduados.')
-      .addFields(
-        { name: `━━━ ${reqs['3SGT'].label} ━━━`, value: formatReqs('3SGT'), inline: false },
-        { name: `━━━ ${reqs['2SGT'].label} ━━━`, value: formatReqs('2SGT'), inline: false },
-        { name: `━━━ ${reqs['1SGT'].label} ━━━`, value: formatReqs('1SGT'), inline: false },
-        { name: `━━━ ${reqs.STEN.label} ━━━`, value: formatReqs('STEN'), inline: false },
-      )
-      .setFooter({ text: config.branding.footerText })
-
-    // ═══════════ Embed 3: Oficiais ═══════════
-    const embedOficiais = new EmbedBuilder()
-      .setColor('#F1C40F')
-      .setTitle('🎖️ Requisitos de Promoção — Oficiais')
-      .setDescription('Requisitos necessários para subir de patente nos oficiais.')
-      .addFields(
-        { name: `━━━ ${reqs.ASP.label} ━━━`, value: formatReqs('ASP'), inline: false },
-        { name: `━━━ ${reqs['2TEN'].label} ━━━`, value: formatReqs('2TEN'), inline: false },
-        { name: `━━━ ${reqs['1TEN'].label} ━━━`, value: formatReqs('1TEN'), inline: false },
-        { name: `━━━ ${reqs.CAP.label} ━━━`, value: formatReqs('CAP'), inline: false },
-      )
-      .setFooter({ text: config.branding.footerText })
-
-    // ═══════════ Embed 4: Alto Comando ═══════════
-    const embedAlto = new EmbedBuilder()
-      .setColor('#E74C3C')
-      .setTitle('🎖️ Requisitos de Promoção — Alto Comando')
-      .setDescription('Patentes de alto comando requerem indicação.')
-      .addFields(
-        { name: `━━━ ${reqs.MAJ.label} ━━━`, value: formatReqs('MAJ'), inline: false },
-        { name: `━━━ ${reqs.TCOR.label} ━━━`, value: formatReqs('TCOR'), inline: false },
-        { name: '━━━ COR em diante ━━━', value: '🏛️ Nomeação direta pelo Alto Comando', inline: false },
-      )
-      .setFooter({ text: `${config.branding.footerText} • Requisitos de Promoção` })
       .setTimestamp()
 
-    await channel.send({ embeds: [embedPracas, embedGraduados, embedOficiais, embedAlto] })
+    const banner = attachImage(path.join(__dirname, '..', config.branding.bannerPath))
+    embed.setImage(banner.url)
+
+    await channel.send({ embeds: [embed], files: [banner.attachment] })
 
     await interaction.editReply({
       content: `✅ Requisitos de promoção enviados no canal <#${config.channels.requisitos}>.`,
