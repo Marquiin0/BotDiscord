@@ -160,99 +160,87 @@ module.exports = {
         }
 
         rows.push({
-          nome: member.displayName,
-          patente: rank.tag,
-          proxima: nextRankTag,
-          acaoApreensao: reqs.indicacao ? 'N/A' : `${totalAcaoApreensao}/${reqs.apreensaoAcao}`,
-          prisoes: reqs.indicacao ? 'N/A' : `${totalPrisao}/${reqs.prisao}`,
-          horasSemanais: horasSemanais.toFixed(1),
-          horasAcumuladas: horasAcumuladas.toFixed(1),
-          horasReq: reqs.indicacao ? 'N/A' : `${reqs.horasPatrulha || 0}`,
-          cursosAcao: reqs.indicacao ? 'N/A' : `${cursosAcao}/${reqs.cursosAcao}`,
-          maa: hasMaa,
-          advertencias: advCount,
-          diasNoCargo: diasNoCargo,
-          diasReq: Math.max(reqs.dias - dayReduction, 0),
-          reducaoLoja: dayReduction > 0 ? `-${dayReduction} dias` : '-',
-          status: apto ? 'Apto' : 'Não Apto',
-          _apto: apto,
-          _advReq: reqs.semAdvertencia || false,
-          _advCount: advCount,
+          values: [
+            member.displayName,
+            rank.tag,
+            nextRankTag,
+            reqs.indicacao ? 'N/A' : `${totalAcaoApreensao}/${reqs.apreensaoAcao}`,
+            reqs.indicacao ? 'N/A' : `${totalPrisao}/${reqs.prisao}`,
+            `${horasSemanais.toFixed(1)}h`,
+            `${horasAcumuladas.toFixed(1)}h`,
+            reqs.indicacao ? 'N/A' : `${reqs.horasPatrulha || 0}h`,
+            reqs.indicacao ? 'N/A' : `${cursosAcao}/${reqs.cursosAcao}`,
+            hasMaa,
+            advCount,
+            diasNoCargo,
+            Math.max(reqs.dias - dayReduction, 0),
+            dayReduction > 0 ? `-${dayReduction} dias` : '-',
+            apto ? 'Apto' : 'Não Apto',
+          ],
+          apto,
+          advReq: reqs.semAdvertencia || false,
+          advCount,
         })
       }
 
       // Ordenar por rank order
       const rankOrderMap = {}
       config.rankOrder.forEach((key, i) => { rankOrderMap[config.ranks[key].tag] = i })
-      rows.sort((a, b) => (rankOrderMap[a.patente] || 99) - (rankOrderMap[b.patente] || 99))
+      rows.sort((a, b) => (rankOrderMap[a.values[1]] || 99) - (rankOrderMap[b.values[1]] || 99))
 
       // Gerar Excel
       const workbook = new Excel.Workbook()
       const worksheet = workbook.addWorksheet('Relatório de Cargos')
-      worksheet.columns = [
-        { header: 'Nome', key: 'nome', width: 30 },
-        { header: 'Patente', key: 'patente', width: 12 },
-        { header: 'Próxima', key: 'proxima', width: 12 },
-        { header: 'Ações/Apreensões', key: 'acaoApreensao', width: 18 },
-        { header: 'Prisões', key: 'prisoes', width: 12 },
-        { header: 'Horas Semanais', key: 'horasSemanais', width: 16 },
-        { header: 'Horas Acumuladas', key: 'horasAcumuladas', width: 18 },
-        { header: 'Horas Req.', key: 'horasReq', width: 12 },
-        { header: 'Cursos Ação', key: 'cursosAcao', width: 14 },
-        { header: 'MAA', key: 'maa', width: 8 },
-        { header: 'Advertências', key: 'advertencias', width: 14 },
-        { header: 'Dias no Cargo', key: 'diasNoCargo', width: 14 },
-        { header: 'Dias Req.', key: 'diasReq', width: 12 },
-        { header: 'Redução Loja', key: 'reducaoLoja', width: 14 },
-        { header: 'Status', key: 'status', width: 12 },
-      ]
 
-      // Estilizar cabeçalho
-      const headerRow = worksheet.getRow(1)
+      // Cabeçalhos
+      const headers = [
+        'Nome', 'Patente', 'Próxima', 'Ações/Apreensões', 'Prisões',
+        'Horas Semanais', 'Horas Acumuladas', 'Horas Req.',
+        'Cursos Ação', 'MAA', 'Advertências', 'Dias no Cargo',
+        'Dias Req.', 'Redução Loja', 'Status',
+      ]
+      const widths = [30, 12, 12, 18, 12, 16, 18, 12, 14, 8, 14, 14, 12, 14, 12]
+
+      const headerRow = worksheet.addRow(headers)
       headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } }
       headerRow.fill = {
         type: 'pattern',
         pattern: 'solid',
         fgColor: { argb: 'FF1E90FF' },
       }
+      headerRow.alignment = { horizontal: 'center', vertical: 'middle' }
+      widths.forEach((w, i) => { worksheet.getColumn(i + 1).width = w })
 
       // Preencher linhas
       for (const data of rows) {
-        const row = worksheet.addRow({
-          nome: data.nome,
-          patente: data.patente,
-          proxima: data.proxima,
-          acaoApreensao: data.acaoApreensao,
-          prisoes: data.prisoes,
-          horasSemanais: data.horasSemanais,
-          horasAcumuladas: data.horasAcumuladas,
-          horasReq: data.horasReq,
-          cursosAcao: data.cursosAcao,
-          maa: data.maa,
-          advertencias: data.advertencias,
-          diasNoCargo: data.diasNoCargo,
-          diasReq: data.diasReq,
-          reducaoLoja: data.reducaoLoja,
-          status: data.status,
-        })
+        const row = worksheet.addRow(data.values)
+        row.alignment = { horizontal: 'center', vertical: 'middle' }
+        row.getCell(1).alignment = { horizontal: 'left', vertical: 'middle' }
 
-        // Colorir status
-        if (data._apto) {
-          row.getCell('status').fill = {
+        // Colorir status (coluna 15)
+        if (data.apto) {
+          row.getCell(15).fill = {
             type: 'pattern',
             pattern: 'solid',
             fgColor: { argb: 'FF2ECC71' },
           }
+          row.getCell(15).font = { bold: true }
+        } else {
+          row.getCell(15).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFFF6B6B' },
+          }
         }
 
-        // Colorir advertências em vermelho se requer 0 e tem
-        if (data._advReq && data._advCount > 0) {
-          row.getCell('advertencias').fill = {
+        // Colorir advertências em vermelho se requer 0 e tem (coluna 11)
+        if (data.advReq && data.advCount > 0) {
+          row.getCell(11).fill = {
             type: 'pattern',
             pattern: 'solid',
             fgColor: { argb: 'FFFF0000' },
           }
-          row.getCell('advertencias').font = { color: { argb: 'FFFFFFFF' } }
+          row.getCell(11).font = { color: { argb: 'FFFFFFFF' }, bold: true }
         }
       }
 
