@@ -16,6 +16,7 @@ const { Op } = require('sequelize')
 const config = require('../config')
 
 function getRankTag(roleId) {
+  if (roleId === config.roles.rh) return '[R.H]'
   for (const key of config.rankOrder) {
     if (config.ranks[key].roleId === roleId) return config.ranks[key].tag
   }
@@ -44,6 +45,7 @@ module.exports = {
             name: config.ranks[key].tag,
             value: config.ranks[key].roleId,
           })),
+          { name: '[R.H]', value: config.roles.rh },
         ),
     ),
 
@@ -73,7 +75,7 @@ module.exports = {
         })
       }
 
-      // Identifica o cargo atual
+      // Identifica o cargo atual (patente)
       let oldRoleId = null
       for (const roleId of Object.keys(promotionTags)) {
         if (member.roles.cache.has(roleId)) {
@@ -82,24 +84,50 @@ module.exports = {
         }
       }
 
-      const oldTag = promotionTags[oldRoleId]
-      const newTag = promotionTags[newRoleId]
+      const isRemovingRH = newRoleId === config.roles.rh
+      let oldTag, newTag, updatedNickname
 
-      if (!oldRoleId || !newRoleId || !newTag) {
-        return await interaction.editReply({
-          content:
-            '⚠️ O usuário não possui um cargo válido para rebaixamento ou o cargo de destino é inválido.',
-        })
+      if (isRemovingRH) {
+        // Rebaixar de R.H: remove o cargo R.H e volta o nickname para a patente atual
+        if (!member.roles.cache.has(config.roles.rh)) {
+          return await interaction.editReply({
+            content: '⚠️ O usuário não possui o cargo R.H.',
+          })
+        }
+        if (!oldRoleId) {
+          return await interaction.editReply({
+            content: '⚠️ O usuário não possui uma patente válida.',
+          })
+        }
+        await member.roles.remove(config.roles.rh).catch(console.error)
+        updatedNickname = member.displayName.replace(/\[.*?\]/, promotionTags[oldRoleId])
+        await member.setNickname(updatedNickname).catch(console.error)
+        oldTag = '[R.H]'
+        newTag = promotionTags[oldRoleId]
+      } else {
+        oldTag = promotionTags[oldRoleId]
+        newTag = promotionTags[newRoleId]
+
+        if (!oldRoleId || !newRoleId || !newTag) {
+          return await interaction.editReply({
+            content:
+              '⚠️ O usuário não possui um cargo válido para rebaixamento ou o cargo de destino é inválido.',
+          })
+        }
+
+        // Remove o cargo atual e adiciona o novo
+        await member.roles.remove(oldRoleId).catch(console.error)
+        await member.roles.add(newRoleId).catch(console.error)
+
+        // Se tinha R.H, remove também
+        if (member.roles.cache.has(config.roles.rh)) {
+          await member.roles.remove(config.roles.rh).catch(console.error)
+        }
+
+        // Atualiza o apelido
+        updatedNickname = member.displayName.replace(/\[.*?\]/, newTag)
+        await member.setNickname(updatedNickname).catch(console.error)
       }
-
-      // Remove o cargo atual e adiciona o novo
-      await member.roles.remove(oldRoleId).catch(console.error)
-      await member.roles.add(newRoleId).catch(console.error)
-
-      // Atualiza o apelido
-      const currentNickname = member.displayName
-      const updatedNickname = currentNickname.replace(/\[.*?\]/, newTag)
-      await member.setNickname(updatedNickname).catch(console.error)
 
       // Atualiza registro
       await PromotionRecords.upsert({

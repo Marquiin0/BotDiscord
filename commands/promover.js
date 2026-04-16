@@ -15,6 +15,7 @@ const { Op } = require('sequelize')
 const config = require('../config')
 
 function getRankTag(roleId) {
+  if (roleId === config.roles.rh) return '[R.H]'
   for (const key of config.rankOrder) {
     if (config.ranks[key].roleId === roleId) return config.ranks[key].tag
   }
@@ -43,6 +44,7 @@ module.exports = {
             name: config.ranks[key].tag,
             value: config.ranks[key].roleId,
           })),
+          { name: '[R.H]', value: config.roles.rh },
         ),
     ),
 
@@ -74,7 +76,7 @@ module.exports = {
         })
       }
 
-      // Identifica o cargo atual do usuário
+      // Identifica o cargo atual do usuário (patente)
       let oldRoleId = null
       for (const roleId of Object.keys(promotionTags)) {
         if (member.roles.cache.has(roleId)) {
@@ -83,24 +85,40 @@ module.exports = {
         }
       }
 
-      const oldTag = promotionTags[oldRoleId]
-      const newTag = promotionTags[newRoleId]
+      const isRH = newRoleId === config.roles.rh
+      let oldTag, newTag, updatedNickname
 
-      if (!oldRoleId || !newRoleId || !newTag) {
-        return await interaction.editReply({
-          content:
-            '⚠️ O usuário não possui um cargo válido para promoção ou cargo de destino inválido.',
-        })
+      if (isRH) {
+        // R.H é cargo administrativo: adiciona sem remover a patente
+        if (!oldRoleId) {
+          return await interaction.editReply({
+            content: '⚠️ O usuário não possui uma patente válida.',
+          })
+        }
+        await member.roles.add(newRoleId).catch(console.error)
+        updatedNickname = member.displayName.replace(/\[.*?\]/, '[R.H]')
+        await member.setNickname(updatedNickname).catch(console.error)
+        oldTag = promotionTags[oldRoleId]
+        newTag = '[R.H]'
+      } else {
+        oldTag = promotionTags[oldRoleId]
+        newTag = promotionTags[newRoleId]
+
+        if (!oldRoleId || !newRoleId || !newTag) {
+          return await interaction.editReply({
+            content:
+              '⚠️ O usuário não possui um cargo válido para promoção ou cargo de destino inválido.',
+          })
+        }
+
+        // Remove o cargo antigo e adiciona o novo
+        await member.roles.remove(oldRoleId).catch(console.error)
+        await member.roles.add(newRoleId).catch(console.error)
+
+        // Atualiza o apelido substituindo a tag antiga pela nova
+        updatedNickname = member.displayName.replace(/\[.*?\]/, newTag)
+        await member.setNickname(updatedNickname).catch(console.error)
       }
-
-      // Remove o cargo antigo e adiciona o novo
-      await member.roles.remove(oldRoleId).catch(console.error)
-      await member.roles.add(newRoleId).catch(console.error)
-
-      // Atualiza o apelido substituindo a tag antiga pela nova
-      const currentNickname = member.displayName
-      const updatedNickname = currentNickname.replace(/\[.*?\]/, newTag)
-      await member.setNickname(updatedNickname).catch(console.error)
 
       // Atualiza o registro de promoção
       await PromotionRecords.upsert({
