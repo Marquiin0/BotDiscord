@@ -172,9 +172,7 @@ module.exports = {
       !interaction.member.permissions.has(
         PermissionsBitField.Flags.Administrator,
       ) &&
-      !interaction.memberPermissions.has(
-        PermissionsBitField.Flags.UseApplicationCommands,
-      )
+      !interaction.member.roles.cache.hasAny(...config.permissions.rhPlus)
     ) {
       return interaction.reply({
         content: '❌ Você não tem permissão.',

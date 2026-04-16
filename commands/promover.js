@@ -53,9 +53,7 @@ module.exports = {
       !interaction.member.permissions.has(
         PermissionsBitField.Flags.Administrator,
       ) &&
-      !interaction.memberPermissions.has(
-        PermissionsBitField.Flags.UseApplicationCommands,
-      )
+      !interaction.member.roles.cache.hasAny(...config.permissions.rhPlus)
     ) {
       return interaction.reply({
         content: '❌ Você não tem permissão para usar este comando.',
@@ -66,8 +64,35 @@ module.exports = {
     await interaction.deferReply({ ephemeral: true })
 
     try {
-      const user = interaction.options.getUser('usuario')
       const newRoleId = interaction.options.getString('cargo')
+
+      // Verificar limite de promoção por cargo (exceto admins)
+      if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+        for (const [roleId, maxRankKey] of Object.entries(config.permissions.promotionLimits)) {
+          if (interaction.member.roles.cache.has(roleId)) {
+            const maxIndex = config.rankOrder.indexOf(maxRankKey)
+            // Encontrar o rank key do cargo selecionado
+            let selectedRankKey = null
+            for (const key of config.rankOrder) {
+              if (config.ranks[key] && config.ranks[key].roleId === newRoleId) {
+                selectedRankKey = key
+                break
+              }
+            }
+            if (selectedRankKey) {
+              const selectedIndex = config.rankOrder.indexOf(selectedRankKey)
+              if (selectedIndex < maxIndex) {
+                const maxTag = config.ranks[maxRankKey].tag
+                return interaction.editReply({
+                  content: `❌ Você só pode promover até **${maxTag}**. Não tem autorização para cargos acima disso.`,
+                })
+              }
+            }
+            break
+          }
+        }
+      }
+      const user = interaction.options.getUser('usuario')
       const member = interaction.guild.members.cache.get(user.id)
 
       if (!member) {

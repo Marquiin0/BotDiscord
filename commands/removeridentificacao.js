@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, PermissionsBitField } = require('discord.js');
 const { Identificacao } = require('../database.js');
+const config = require('../config');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -17,7 +18,7 @@ module.exports = {
      // Verifica permissão
           if (
             !interaction.member.permissions.has(PermissionsBitField.Flags.Administrator) &&
-            !interaction.memberPermissions.has(PermissionsBitField.Flags.UseApplicationCommands)
+            !interaction.member.roles.cache.hasAny(...config.permissions.rhPlus)
           ) {
             return await interaction.editReply({
               content: '❌ Você não tem permissão.'

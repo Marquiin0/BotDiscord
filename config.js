@@ -175,6 +175,22 @@ module.exports = {
             '1477408727295463436',  // SCMD
             '1477408727295463437',  // CMD
         ],
+        // RH+ = R.H, I.A, S.C, H.C, SCMD, CMD (para comandos administrativos)
+        rhPlus: [
+            '1477408727270166607',  // R.H
+            '1477408727270166606',  // I.A
+            '1477408727270166608',  // S.C
+            '1477408727295463435',  // H.C
+            '1477408727295463436',  // SCMD
+            '1477408727295463437',  // CMD
+        ],
+        // Limite de promoção/rebaixamento por cargo
+        promotionLimits: {
+            '1477408727270166607': 'MAJ',   // R.H pode promover até Major
+            '1477408727270166606': 'MAJ',   // I.A pode promover até Major
+            '1477408727270166608': 'COR',   // S.C pode promover até Coronel
+            '1477408727295463435': 'COR',   // H.C pode promover até Coronel
+        },
     },
 
     // ==================== TICKET TYPES ====================

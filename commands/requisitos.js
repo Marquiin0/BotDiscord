@@ -15,7 +15,8 @@ module.exports = {
 
   async execute(interaction) {
     if (
-      !interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)
+      !interaction.member.permissions.has(PermissionsBitField.Flags.Administrator) &&
+      !interaction.member.roles.cache.hasAny(...config.permissions.rhPlus)
     ) {
       return interaction.reply({
         content: '❌ Você não tem permissão para usar este comando.',

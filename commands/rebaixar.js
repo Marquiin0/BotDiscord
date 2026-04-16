@@ -57,9 +57,7 @@ module.exports = {
         !interaction.member.permissions.has(
           PermissionsBitField.Flags.Administrator,
         ) &&
-        !interaction.memberPermissions.has(
-          PermissionsBitField.Flags.UseApplicationCommands,
-        )
+        !interaction.member.roles.cache.hasAny(...config.permissions.rhPlus)
       ) {
         return await interaction.editReply({
           content: '❌ Você não tem permissão.',
@@ -81,6 +79,33 @@ module.exports = {
         if (member.roles.cache.has(roleId)) {
           oldRoleId = roleId
           break
+        }
+      }
+
+      // Verificar limite de rebaixamento por cargo (exceto admins)
+      if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator) && oldRoleId) {
+        for (const [limitRoleId, maxRankKey] of Object.entries(config.permissions.promotionLimits)) {
+          if (interaction.member.roles.cache.has(limitRoleId)) {
+            const maxIndex = config.rankOrder.indexOf(maxRankKey)
+            // Encontrar o rank key do cargo atual do alvo
+            let targetRankKey = null
+            for (const key of config.rankOrder) {
+              if (config.ranks[key].roleId === oldRoleId) {
+                targetRankKey = key
+                break
+              }
+            }
+            if (targetRankKey) {
+              const targetIndex = config.rankOrder.indexOf(targetRankKey)
+              if (targetIndex < maxIndex) {
+                const maxTag = config.ranks[maxRankKey].tag
+                return interaction.editReply({
+                  content: `❌ Você só pode rebaixar oficiais até **${maxTag}**. Este oficial está acima do seu limite.`,
+                })
+              }
+            }
+            break
+          }
         }
       }
 
