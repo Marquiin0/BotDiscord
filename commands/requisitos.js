@@ -68,12 +68,7 @@ module.exports = {
       `**🎖️ ${reqs.ASP.label}**\n${formatReqs('ASP')}\n`,
       `**🎖️ ${reqs['2TEN'].label}**\n${formatReqs('2TEN')}\n`,
       `**🎖️ ${reqs['1TEN'].label}**\n${formatReqs('1TEN')}\n`,
-      `**🎖️ ${reqs.CAP.label}**\n${formatReqs('CAP')}\n`,
-
-      '**━━━━━ ALTO COMANDO ━━━━━**\n',
-      `**🎖️ ${reqs.MAJ.label}**\n${formatReqs('MAJ')}\n`,
-      `**🎖️ ${reqs.TCOR.label}**\n${formatReqs('TCOR')}\n`,
-      `**🎖️ COR em diante**\n> 🏛️ Nomeação direta pelo Alto Comando`,
+      `**🎖️ ${reqs.CAP.label}**\n${formatReqs('CAP')}`,
     ]
 
     const embed = new EmbedBuilder()
