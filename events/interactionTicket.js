@@ -45,7 +45,8 @@ function downloadAttachment(url, dest) {
 // Todas as categorias de ticket usam a mesma categoria
 const ticketCategoryId = config.categories.tickets
 
-const staffRoles = config.permissions.corregedoria
+// Quem pode usar botões de ticket (assumir, finalizar, adicionar, remover, poke)
+const staffRoles = config.permissions.rhPlus
 
 const typeMap = {
   corregedoria: 'crg',
@@ -105,18 +106,18 @@ function getCategoryIdForTipo() {
 }
 
 function getExtraRolesForTipo(sigla) {
-  // Corregedoria: I.C + H.C + SCMD + CMD
-  if (sigla === 'crg') return config.permissions.corregedoria
-  // Alto Comando: SCMD + CMD
-  if (sigla === 'alt') return [config.ranks.SCMD.roleId, config.ranks.CMD.roleId]
-  // Recrutamento: staff geral
-  if (sigla === 'rec') return [config.permissions.staff]
-  // Dúvidas: staff geral
-  if (sigla === 'duv') return [config.permissions.staff]
-  // Donater: staff geral
-  if (sigla === 'dnt') return [config.permissions.staff]
-  // Item Misterioso: usuários autorizados (IDs individuais, não roles)
-  if (sigla === 'mst') return config.itemMisterioso.authorizedUsers
+  // Dúvidas: RH+ (R.H, I.A, S.C, H.C, SCMD, CMD)
+  if (sigla === 'duv') return config.permissions.rhPlus
+  // Corregedoria: I.A+ (I.A, S.C, H.C, SCMD, CMD)
+  if (sigla === 'crg') return config.permissions.iaPlus
+  // Alto Comando: HC+ (H.C, SCMD, CMD)
+  if (sigla === 'alt') return config.permissions.hcPlus
+  // Recrutamento: FTO/RECS + RH+
+  if (sigla === 'rec') return [...config.permissions.ftoRecs, ...config.permissions.rhPlus]
+  // Donater: SCMD + CMD apenas
+  if (sigla === 'dnt') return [config.ranks.SCMD.roleId, config.ranks.CMD.roleId]
+  // Item Misterioso: SCMD + CMD apenas
+  if (sigla === 'mst') return [config.ranks.SCMD.roleId, config.ranks.CMD.roleId]
   return []
 }
 

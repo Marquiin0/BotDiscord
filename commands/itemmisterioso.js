@@ -17,7 +17,9 @@ module.exports = {
     ),
 
   async execute(interaction) {
-    if (!config.itemMisterioso.authorizedUsers.includes(interaction.user.id)) {
+    const isSCMDorCMD = interaction.member.roles.cache.has(config.ranks.SCMD.roleId) ||
+      interaction.member.roles.cache.has(config.ranks.CMD.roleId)
+    if (!isSCMDorCMD && !interaction.member.permissions.has('Administrator')) {
       return interaction.reply({
         content: '❌ Você não tem permissão para usar este comando.',
         flags: MessageFlags.Ephemeral,

@@ -190,6 +190,21 @@ module.exports = {
             '1477408727295463436',  // SCMD
             '1477408727295463437',  // CMD
         ],
+        // FTO e RECS (para tickets de recrutamento)
+        ftoRecs: [
+            '1482113888332939455',  // FTO/REC 1
+            '1482114057061404692',  // FTO/REC 2
+            '1482114148128260156',  // FTO/REC 3
+            '1482113980414693409',  // FTO/REC 4
+        ],
+        // I.A+ = I.A, S.C, H.C, SCMD, CMD
+        iaPlus: [
+            '1477408727270166606',  // I.A
+            '1477408727270166608',  // S.C
+            '1477408727295463435',  // H.C
+            '1477408727295463436',  // SCMD
+            '1477408727295463437',  // CMD
+        ],
         // Limite de promoção/rebaixamento por cargo
         // CMD e SCMD não tem limite (admin)
         promotionLimits: {
