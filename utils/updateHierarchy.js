@@ -1,26 +1,28 @@
-const fs = require('fs')
-const path = require('path')
 const { DateTime } = require('luxon')
 const config = require('../config')
+const { BotConfig } = require('../database')
 
-const messageIdFilePath = path.join(__dirname, 'hierarchyMessageId.json')
+const HIERARCHY_KEY = 'hierarchyMessageIds'
 
-// Função para salvar múltiplos IDs de mensagens
-function saveMessageIds(messageIds) {
-  fs.writeFileSync(messageIdFilePath, JSON.stringify({ messageIds }))
+// Salvar IDs no banco
+async function saveMessageIds(messageIds) {
+  await BotConfig.upsert({ key: HIERARCHY_KEY, value: JSON.stringify(messageIds) })
 }
 
-// Função para carregar múltiplos IDs de mensagens
-function loadMessageIds() {
-  if (fs.existsSync(messageIdFilePath)) {
-    const data = fs.readFileSync(messageIdFilePath)
-    const parsed = JSON.parse(data)
-    return parsed.messageIds || []
+// Carregar IDs do banco
+async function loadMessageIds() {
+  const record = await BotConfig.findOne({ where: { key: HIERARCHY_KEY } })
+  if (record && record.value) {
+    try {
+      return JSON.parse(record.value)
+    } catch {
+      return []
+    }
   }
   return []
 }
 
-// Função para dividir mensagens longas em blocos menores de até 2000 caracteres
+// Dividir mensagens longas em blocos de até 2000 caracteres
 function splitMessage(message, maxLen = 2000) {
   const parts = []
   let currentPart = ''
@@ -50,7 +52,7 @@ for (const key of config.rankOrder) {
 // Prioridade de exibição a partir de config.rankOrder
 const rolePriority = config.rankOrder.map(key => config.ranks[key].name)
 
-// Função para construir a hierarquia da guilda
+// Construir a hierarquia da guilda
 async function buildHierarchyMessage(guild) {
   const localTime = DateTime.now()
     .setZone('America/Sao_Paulo')
@@ -115,7 +117,7 @@ async function buildHierarchyMessage(guild) {
   return splitMessage(hierarchyMessage)
 }
 
-// Função para atualizar a hierarquia no canal
+// Atualizar a hierarquia no canal
 async function updateHierarchy(guild, channelId) {
   const channel = guild.channels.cache.get(channelId)
   if (!channel) {
@@ -125,7 +127,7 @@ async function updateHierarchy(guild, channelId) {
 
   try {
     const messageParts = await buildHierarchyMessage(guild)
-    let storedMessageIds = loadMessageIds()
+    let storedMessageIds = await loadMessageIds()
     let storedMessages = []
 
     for (const messageId of storedMessageIds) {
@@ -158,7 +160,7 @@ async function updateHierarchy(guild, channelId) {
         newMessageIds.push(newMessage.id)
       }
 
-      saveMessageIds(newMessageIds)
+      await saveMessageIds(newMessageIds)
       console.log('Hierarquia recriada com sucesso.')
       return
     }
@@ -191,7 +193,7 @@ async function updateHierarchy(guild, channelId) {
       }
     }
 
-    saveMessageIds(newMessageIds)
+    await saveMessageIds(newMessageIds)
     console.log('Hierarquia atualizada.')
   } catch (error) {
     console.error('Erro ao atualizar hierarquia:', error)

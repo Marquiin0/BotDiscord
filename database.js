@@ -848,6 +848,13 @@ WeeklyPoints.sync()
 Ausencia.sync()
 PatrolSession.sync()
 
+// Key-value store para configurações persistentes do bot (IDs de mensagens, etc.)
+const BotConfig = sequelize.define('BotConfig', {
+    key: { type: DataTypes.STRING, primaryKey: true, allowNull: false },
+    value: { type: DataTypes.TEXT, allowNull: true },
+})
+BotConfig.sync()
+
 module.exports = {
     UserPoints,
     UserLog,
@@ -884,6 +891,7 @@ module.exports = {
     ArsenalProcessedLog,
     ArsenalIsento,
     PatrolSession,
+    BotConfig,
 };
 
 
