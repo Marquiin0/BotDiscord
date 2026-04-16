@@ -1,6 +1,7 @@
 const { PatrolSession, MemberID } = require('../database')
 const config = require('../config')
 const moment = require('moment-timezone')
+const { EmbedBuilder } = require('discord.js')
 
 // Cache de membros da guild para evitar guild.members.fetch() a cada toggle
 let membersCache = null
@@ -139,6 +140,36 @@ module.exports = {
             duration: duration > 0 ? duration : 0,
           })
           console.log(`[PatrolMonitor] ${memberName} (${inGameId}) saiu de serviço [${source}] - ${duration.toFixed(2)}h`)
+
+          // Enviar log para o servidor de logs
+          try {
+            const logsGuild = message.client.guilds.cache.get(config.guilds.logs)
+            if (logsGuild) {
+              const logChannel = logsGuild.channels.cache.get(config.logsChannels.horasPTR)
+              if (logChannel) {
+                const entryFormatted = moment(openSession.entryTime).tz('America/Sao_Paulo').format('DD/MM/YYYY HH:mm:ss')
+                const exitFormatted = moment(dateTime).tz('America/Sao_Paulo').format('DD/MM/YYYY HH:mm:ss')
+                const oficialDisplay = discordUserId ? `<@${discordUserId}>` : memberName
+
+                const logEmbed = new EmbedBuilder()
+                  .setTitle('⏰ Log de Patrulha')
+                  .addFields(
+                    { name: 'Oficial', value: oficialDisplay, inline: true },
+                    { name: 'ID', value: inGameId, inline: true },
+                    { name: 'Entrada', value: entryFormatted, inline: true },
+                    { name: 'Saída', value: exitFormatted, inline: true },
+                    { name: 'Duração', value: `${duration.toFixed(2)}h`, inline: true },
+                  )
+                  .setColor(config.branding.color)
+                  .setFooter({ text: config.branding.footerText })
+                  .setTimestamp()
+
+                await logChannel.send({ embeds: [logEmbed] })
+              }
+            }
+          } catch (logErr) {
+            console.error('[PatrolMonitor] Erro ao enviar log de patrulha:', logErr.message)
+          }
         } else {
           console.log(`[PatrolMonitor] ${memberName} (${inGameId}) saiu sem sessão aberta [${source}]`)
         }

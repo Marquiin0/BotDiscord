@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder, MessageFlags } = require('discord.js');
 const { UserPontos } = require('../database.js');
+const config = require('../config.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -50,6 +51,31 @@ module.exports = {
         )
         .setColor('#00FF00')
         .setTimestamp();
+
+      // Enviar log para o servidor de logs
+      try {
+        const logsGuild = interaction.client.guilds.cache.get(config.guilds.logs);
+        if (logsGuild) {
+          const logChannel = logsGuild.channels.cache.get(config.logsChannels.pontos);
+          if (logChannel) {
+            const logEmbed = new EmbedBuilder()
+              .setTitle('💰 Log de Adição de Pontos')
+              .addFields(
+                { name: 'Oficial', value: `<@${targetUser.id}>`, inline: true },
+                { name: 'Pontos Adicionados', value: `\`${quantidade}\``, inline: true },
+                { name: 'Pontos Totais', value: `\`${newPoints}\``, inline: true },
+                { name: 'Adicionado por', value: `<@${interaction.user.id}>`, inline: true },
+              )
+              .setColor(config.branding.color)
+              .setFooter({ text: config.branding.footerText })
+              .setTimestamp();
+
+            await logChannel.send({ embeds: [logEmbed] });
+          }
+        }
+      } catch (logErr) {
+        console.error('[Pontos] Erro ao enviar log de pontos:', logErr.message);
+      }
 
       // Responde de forma efêmera
       return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });

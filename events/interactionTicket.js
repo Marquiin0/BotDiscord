@@ -9,6 +9,7 @@ const {
   TextInputBuilder,
   TextInputStyle,
   MessageFlags,
+  AttachmentBuilder,
 } = require('discord.js')
 const fs = require('fs')
 const path = require('path')
@@ -313,6 +314,32 @@ module.exports = {
         components: [row],
       })
       await ticketChannel.setTopic(`${userId}|${ticketMsg.id}`)
+      // Log de ticket aberto na guild de logs
+      try {
+        const logGuild = interaction.client.guilds.cache.get(config.guilds.logs) ||
+          await interaction.client.guilds.fetch(config.guilds.logs).catch(() => null)
+        if (logGuild) {
+          const logChannel = logGuild.channels.cache.get(config.logsChannels.ticket) ||
+            await logGuild.channels.fetch(config.logsChannels.ticket).catch(() => null)
+          if (logChannel && logChannel.isTextBased()) {
+            const embedOpenLog = new EmbedBuilder()
+              .setColor(0x0099ff)
+              .setTitle('🎟 Ticket Aberto')
+              .addFields(
+                { name: '👤 Usuário', value: `<@${userId}>`, inline: true },
+                { name: '📁 Tipo', value: sigla.toUpperCase(), inline: true },
+                { name: '📝 Motivo', value: `\`\`\`\n${reason}\n\`\`\``, inline: false },
+                { name: '📌 Canal', value: `<#${ticketChannel.id}>`, inline: true },
+              )
+              .setFooter({ text: config.branding.footerText })
+              .setTimestamp()
+            await logChannel.send({ embeds: [embedOpenLog] })
+          }
+        }
+      } catch (err) {
+        console.error('Erro ao enviar log de ticket aberto:', err)
+      }
+
       return interaction.editReply({
         content: `✅ Ticket criado com sucesso!\nCanal: ${ticketChannel}\nID: \`${shortTicketName}\``,
         flags: MessageFlags.Ephemeral,
@@ -597,8 +624,6 @@ module.exports = {
 
         fs.writeFileSync(transcriptFilePath, transcriptHTML)
 
-        const transcriptUrl = `https://www.bpolpolice.com.br/transcripts/${transcriptFileName}`
-
         const transcriptEmbed = new EmbedBuilder()
           .setTitle('📜 Transcript do Ticket')
           .addFields(
@@ -616,17 +641,12 @@ module.exports = {
             },
           )
           .setColor(0x0099ff)
-          .setFooter({ text: 'Ticket Finalizado' })
+          .setFooter({ text: config.branding.footerText })
           .setTimestamp()
 
-        const transcriptButton = new ButtonBuilder()
-          .setLabel('Acessar Transcript')
-          .setStyle(ButtonStyle.Link)
-          .setURL(transcriptUrl)
-
-        const rowTranscript = new ActionRowBuilder().addComponents(
-          transcriptButton,
-        )
+        const transcriptAttachment = new AttachmentBuilder(transcriptFilePath, {
+          name: transcriptFileName,
+        })
 
         // busca a guild e o canal corretos, mesmo que o ticket esteja em outra guild
         const targetGuild = interaction.client.guilds.cache.get(targetGuildId)
@@ -636,7 +656,7 @@ module.exports = {
         if (transcriptsChannel) {
           await transcriptsChannel.send({
             embeds: [transcriptEmbed],
-            components: [rowTranscript],
+            files: [transcriptAttachment],
           })
         }
         const ticketId = channel.name.split('・')[1].toLowerCase()
@@ -841,6 +861,31 @@ module.exports = {
           { where: { ticketIdentifier: ticketId } },
         )
         console.log('[Assumir] Rows assumidos:', rowsAssumed)
+
+        // Log de ticket assumido na guild de logs
+        try {
+          const logGuild = interaction.client.guilds.cache.get(config.guilds.logs) ||
+            await interaction.client.guilds.fetch(config.guilds.logs).catch(() => null)
+          if (logGuild) {
+            const logChannel = logGuild.channels.cache.get(config.logsChannels.ticket) ||
+              await logGuild.channels.fetch(config.logsChannels.ticket).catch(() => null)
+            if (logChannel && logChannel.isTextBased()) {
+              const embedAssumeLog = new EmbedBuilder()
+                .setColor(0xf1c40f)
+                .setTitle('👮 Ticket Assumido')
+                .addFields(
+                  { name: '🎟 Ticket', value: channel.name, inline: true },
+                  { name: '👮 Assumido por', value: `<@${interaction.user.id}>`, inline: true },
+                )
+                .setFooter({ text: config.branding.footerText })
+                .setTimestamp()
+              await logChannel.send({ embeds: [embedAssumeLog] })
+            }
+          }
+        } catch (err) {
+          console.error('Erro ao enviar log de ticket assumido:', err)
+        }
+
         return interaction.editReply({
           content: '✅ Você assumiu este ticket!',
           flags: MessageFlags.Ephemeral,

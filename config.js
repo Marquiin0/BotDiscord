@@ -46,15 +46,20 @@ module.exports = {
     logsChannels: {
         apreensao: '1477473908260208808',    // Log apreensões (source)
         prisao: '1477473908260208809',       // Log prisões (source)
-        identificacao: '1477473908402946122', // Log identificação
-        ticket: '1477473908260208812',       // Log tickets (transcript)
-        ponto: '1477473908260208804',        // Log ponto/horas
+        identificacao: '1477473908402946122', // Log identificação (aceita/negada)
+        ticket: '1477473908260208812',       // Log tickets (transcript + open/assume/close)
+        ponto: '1477473908260208804',        // Log ponto/horas (source toggle)
         loja: '1477473908402946125',         // Log compras da loja
         rebaixamento: '1477473908402946129', // Log rebaixamentos
         promocao: '1477473908402946129',    // Log promoções
         corregedoria: '1477473908587233434', // Log advertências/exonerações
         cursoMAA: '1481839491030454424',       // Log resultados curso MAA
         pontoMerryWeather: '1493298297073569902', // Log toggle/patrulha MerryWeather
+        ausencia: '1477473908402946126',     // Log ausências
+        aposentadoria: '1477473908402946123', // Log oficiais aposentados
+        horasPTR: '1477473908402946121',     // Log horas PTR (entrada/saída toggle)
+        pontos: '1477473908402946120',       // Log adição de pontos (/pontos)
+        envioPontos: '1477473908402946124',  // Log envio/transferência de pontos
     },
 
     // ==================== CATEGORIAS ====================

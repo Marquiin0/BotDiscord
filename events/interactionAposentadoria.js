@@ -324,6 +324,27 @@ module.exports = {
         .setThumbnail(interaction.user.displayAvatarURL())
 
       await message.edit({ embeds: [updatedEmbed], components: [] })
+
+      // Log de aposentadoria aprovada na guild de logs
+      try {
+        const logsGuild = interaction.client.guilds.cache.get(config.guilds.logs)
+        const logChannel = logsGuild?.channels.cache.get(config.logsChannels.aposentadoria)
+        if (logChannel) {
+          const logEmbed = new EmbedBuilder()
+            .setTitle('📋 Log de Aposentadoria - Aprovada')
+            .setColor('#00FF00')
+            .addFields(
+              { name: '👤 Oficial', value: `<@${userId}>`, inline: true },
+              { name: '📝 Motivo', value: aposentadoria.motivo || 'Não especificado', inline: false },
+              { name: '👮 Aprovado por', value: `<@${interaction.user.id}>`, inline: true },
+            )
+            .setFooter({ text: config.branding.footerText })
+            .setTimestamp()
+          await logChannel.send({ embeds: [logEmbed] })
+        }
+      } catch (err) {
+        console.error('[LOG] Erro ao enviar log de aposentadoria aprovada:', err)
+      }
     }
 
     /** 📌 Recusar Aposentadoria **/
@@ -369,6 +390,27 @@ module.exports = {
         console.log(
           `⚠️ Não foi possível enviar mensagem privada para <@${userId}>. Provavelmente o DM está fechado.`
         )
+      }
+
+      // Log de aposentadoria recusada na guild de logs
+      try {
+        const logsGuild = interaction.client.guilds.cache.get(config.guilds.logs)
+        const logChannel = logsGuild?.channels.cache.get(config.logsChannels.aposentadoria)
+        if (logChannel) {
+          const logEmbed = new EmbedBuilder()
+            .setTitle('📋 Log de Aposentadoria - Recusada')
+            .setColor('#FF0000')
+            .addFields(
+              { name: '👤 Oficial', value: `<@${userId}>`, inline: true },
+              { name: '📝 Motivo', value: aposentadoria?.motivo || 'Não especificado', inline: false },
+              { name: '👮 Recusado por', value: `<@${interaction.user.id}>`, inline: true },
+            )
+            .setFooter({ text: config.branding.footerText })
+            .setTimestamp()
+          await logChannel.send({ embeds: [logEmbed] })
+        }
+      } catch (err) {
+        console.error('[LOG] Erro ao enviar log de aposentadoria recusada:', err)
       }
     }
   },
