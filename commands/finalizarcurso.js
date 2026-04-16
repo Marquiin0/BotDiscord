@@ -181,10 +181,19 @@ module.exports = {
       content: 'Curso finalizado com sucesso!'
     });
 
-    // Envia o embed no canal de aprovados de curso
+    // Envia o embed no canal de aprovados de curso (guild principal)
     const approvedChannel = guild.channels.cache.get(config.channels.cursoAprovados);
     if (approvedChannel) {
       await approvedChannel.send({ embeds: [courseEmbed] });
+    }
+
+    // Envia o log na guild de logs
+    const logsGuild = interaction.client.guilds.cache.get(config.guilds.logs);
+    if (logsGuild) {
+      const logChannel = logsGuild.channels.cache.get('1477473908587233435');
+      if (logChannel) {
+        await logChannel.send({ embeds: [logEmbed] });
+      }
     }
   },
 };
