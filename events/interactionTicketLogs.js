@@ -74,8 +74,11 @@ module.exports = {
         { id: interaction.guild.roles.everyone, deny: [PermissionFlagsBits.ViewChannel] },
         { id: userId, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] },
       ]
+      // Só adiciona roles que existem neste guild
       for (const roleId of config.permissions.rhPlus) {
-        overwrites.push({ id: roleId, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] })
+        if (interaction.guild.roles.cache.has(roleId)) {
+          overwrites.push({ id: roleId, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] })
+        }
       }
 
       let ticketChannel

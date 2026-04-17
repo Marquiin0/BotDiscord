@@ -79,6 +79,14 @@ module.exports = {
         ticketsLogs: '1494500619334193212', // Categoria para tickets (server de logs)
     },
 
+    // ==================== CARGOS DO SERVER DE LOGS (FTO) ====================
+    ftoRoles: {
+        policial: '1494513575627329718',   // Cargo policial (todos recebem ao aceitar)
+        swat: '1477473906863505586',       // Cargo SWAT
+        ste: '1477473906863505584',        // Cargo STE
+        sog: '1477473906863505585',        // Cargo SOG
+    },
+
     // ==================== CARGOS DE PATENTE (ordem: CMD -> EST) ====================
     ranks: {
         CMD:    { roleId: '1477408727295463437', tag: '[CMD]',   name: 'Commander' },
