@@ -13,7 +13,6 @@ const {
   UserActions,
   UserMultiplicadores,
   MemberID,
-  VictoryDefeat,
 } = require('../database.js')
 const moment = require('moment-timezone')
 const actionTypes = require('../utils/actionTypes.json')
