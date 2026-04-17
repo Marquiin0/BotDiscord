@@ -81,7 +81,15 @@ module.exports = {
         const statusIcon = isStale ? '⚠️' : '⏱️'
         const tempoText = `${statusIcon} (${horas}h ${minutos}m)`
 
-        const member = session.discordId ? guild.members.cache.get(session.discordId) : null
+        let member = session.discordId ? guild.members.cache.get(session.discordId) : null
+
+        // Fallback: buscar pelo ID in-game no nickname (formato: | ID)
+        if (!member && session.inGameId) {
+          member = guild.members.cache.find(m => {
+            const match = m.displayName.match(/\|\s*(\d+)/)
+            return match && match[1] === session.inGameId
+          })
+        }
 
         if (!member) {
           outros.push(`\`${session.memberName} | ${session.inGameId}\` ${tempoText}`)
