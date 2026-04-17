@@ -615,17 +615,18 @@ module.exports = {
         const targetGuildId = config.guilds.logs
         const transcriptsChannelId = config.logsChannels.ticket
 
-        const uniqueId = `${channel.id}-${Date.now()}-${Math.floor(Math.random() * 1e9)}`
-        const transcriptFileName = `${uniqueId}.html`
-        const transcriptFilePath = path.join(
-          transcriptsPath,
-          transcriptFileName,
-        )
+        transcriptHTML += `</body></html>`
 
+        const uniqueId = `${channel.id}-${Date.now()}-${Math.floor(Math.random() * 1e9)}`
+        const transcriptFileName = `transcript-${channel.name.split('・')[1] || 'ticket'}.html`
+
+        // Salvar arquivo localmente também
+        const transcriptFilePath = path.join(transcriptsPath, `${uniqueId}.html`)
         fs.writeFileSync(transcriptFilePath, transcriptHTML)
 
         const transcriptEmbed = new EmbedBuilder()
           .setTitle('📜 Transcript do Ticket')
+          .setDescription('O transcript está anexado como arquivo abaixo. Baixe e abra no navegador para visualizar.')
           .addFields(
             { name: 'Nome do Ticket', value: channel.name, inline: true },
             { name: 'Motivo', value: motivo, inline: true },
@@ -644,8 +645,11 @@ module.exports = {
           .setFooter({ text: config.branding.footerText })
           .setTimestamp()
 
-        const transcriptAttachment = new AttachmentBuilder(transcriptFilePath, {
+        // Criar attachment direto do buffer para evitar problemas de path
+        const transcriptBuffer = Buffer.from(transcriptHTML, 'utf-8')
+        const transcriptAttachment = new AttachmentBuilder(transcriptBuffer, {
           name: transcriptFileName,
+          description: `Transcript do ticket ${channel.name}`,
         })
 
         // busca a guild e o canal corretos, mesmo que o ticket esteja em outra guild
