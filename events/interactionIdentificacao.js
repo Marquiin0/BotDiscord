@@ -48,8 +48,8 @@ fs.mkdirSync(ATTACHMENTS_DIR, { recursive: true })
 // Mapa para impedir múltiplas identificações simultâneas
 const activeIdentifications = new Map()
 
-// IDs dos cargos autorizados a negar
-const ALLOWED_ROLES = config.permissions.corregedoria
+// IDs dos cargos autorizados a negar (RH+)
+const ALLOWED_ROLES = config.permissions.rhPlus
 
 module.exports = {
   name: Events.InteractionCreate,

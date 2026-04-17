@@ -47,8 +47,20 @@ module.exports = {
 
       await registro.destroy();
 
+      // Remove cargo identificado e adiciona não identificado
+      try {
+        const targetMember = interaction.guild.members.cache.get(userId) ||
+          await interaction.guild.members.fetch(userId).catch(() => null)
+        if (targetMember) {
+          await targetMember.roles.remove(config.roles.identificado).catch(console.error)
+          await targetMember.roles.add(config.roles.naoIdentificado).catch(console.error)
+        }
+      } catch (err) {
+        console.error('Erro ao remover cargo de identificado:', err)
+      }
+
       return interaction.reply({
-        content: `✅ O registro de identificação do usuário com ID \`${userId}\` foi **removido com sucesso** do banco de dados.`,
+        content: `✅ O registro de identificação do usuário com ID \`${userId}\` foi **removido com sucesso** e os cargos foram atualizados.`,
         ephemeral: true,
       });
     } catch (error) {
