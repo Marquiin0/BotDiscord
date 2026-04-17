@@ -8,6 +8,11 @@ module.exports = {
     guilds: {
         main: '1477408727052193973',       // Genesis Police
         logs: '1477473906863505582',        // Servidor de logs
+        unidades: {
+            sog: '1483574861866602756',    // SOG
+            swat: '1481606531160997953',   // SWAT
+            ste: '1483575520577720502',    // STE
+        },
     },
 
     // ==================== CANAIS (Servidor Principal) ====================
@@ -60,6 +65,10 @@ module.exports = {
         horasPTR: '1477473908402946121',     // Log horas PTR (entrada/saída toggle)
         pontos: '1477473908402946120',       // Log adição de pontos (/pontos)
         envioPontos: '1477473908402946124',  // Log envio/transferência de pontos
+        registro: '1477473907563823116',     // Registro FTO (embed botão)
+        aceitarRegistro: '1477473907563823117', // Aceitar/recusar registros
+        ticketsLogs: '1477473907563823118',  // Tickets do server de logs
+        setUnidades: '1477473908826443830',  // Log de set de unidades
     },
 
     // ==================== CATEGORIAS ====================
@@ -67,6 +76,7 @@ module.exports = {
         acoes: '1477408729728155705',        // Categoria relatórios de ações + setagem
         cursoQuiz: '1477408729509920851',    // Categoria para quizzes do curso MAA
         tickets: '1477408728884969654',      // Categoria para tickets
+        ticketsLogs: '1494500619334193212', // Categoria para tickets (server de logs)
     },
 
     // ==================== CARGOS DE PATENTE (ordem: CMD -> EST) ====================

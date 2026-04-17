@@ -522,6 +522,38 @@ async function handleAceitarSetagem(interaction) {
     files: fotoSource ? [new AttachmentBuilder(fotoSource, { name: 'setagem.png' })] : [],
   })
 
+  // Log de set de unidade (se for server de unidade)
+  try {
+    const unitMap = {
+      [config.guilds.unidades.sog]: 'SOG',
+      [config.guilds.unidades.swat]: 'SWAT',
+      [config.guilds.unidades.ste]: 'STE',
+    }
+    const unitName = unitMap[interaction.guild.id]
+    if (unitName) {
+      const logsGuild = interaction.client.guilds.cache.get(config.guilds.logs)
+      const setChannel = logsGuild?.channels.cache.get(config.logsChannels.setUnidades)
+      if (setChannel) {
+        const setEmbed = new EmbedBuilder()
+          .setColor(0x2ECC71)
+          .setTitle('🎖️ Set de Unidade')
+          .setDescription(`Um oficial foi setado em uma unidade.`)
+          .addFields(
+            { name: '👤 Oficial', value: `<@${targetUserId}>`, inline: true },
+            { name: '🏛️ Unidade', value: unitName, inline: true },
+            { name: '📝 Nome', value: nome, inline: true },
+            { name: '🆔 ID', value: id, inline: true },
+            { name: '✅ Aceito por', value: `<@${interaction.user.id}>`, inline: true },
+          )
+          .setFooter({ text: config.branding.footerText })
+          .setTimestamp()
+        await setChannel.send({ embeds: [setEmbed] })
+      }
+    }
+  } catch (err) {
+    console.error('[Set Unidade] Erro ao enviar log:', err)
+  }
+
   pendingSetagens.delete(targetUserId)
 }
 
