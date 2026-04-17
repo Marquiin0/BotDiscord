@@ -189,7 +189,7 @@ async function showUserInfo(interaction, targetUserId, ephemeral = true) {
       .addFields(
         { name: '👤 Nome', value: member.displayName, inline: true },
         { name: '🎖️ Patente', value: currentRank, inline: true },
-        { name: '🆔 ID', value: memberIdRecord ? memberIdRecord.memberId : 'N/A', inline: true },
+        { name: '🆔 ID', value: memberIdRecord ? memberIdRecord.discordId : (member.displayName.match(/\|\s*(\d+)/) ? member.displayName.match(/\|\s*(\d+)/)[1] : 'N/A'), inline: true },
         { name: '📅 Data de Entrada', value: joinDate, inline: true },
         { name: '📈 Último Up', value: lastPromotion, inline: true },
         { name: '⏰ Horas Semanais', value: `${totalHours}h`, inline: true },
