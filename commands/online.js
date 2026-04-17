@@ -19,7 +19,7 @@ module.exports = {
     .setDescription('Mostra todos os membros em serviço no jogo.'),
 
   async execute(interaction) {
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral })
+    await interaction.deferReply()
 
     try {
       // Busca todas as sessões abertas (em serviço no jogo)
