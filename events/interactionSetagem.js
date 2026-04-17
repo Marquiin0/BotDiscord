@@ -414,6 +414,64 @@ async function handleAceitarSetagem(interaction) {
       })
 
       await registro.update({ messageId: sentMessage.id })
+
+      // Log de identificação na guild de logs
+      try {
+        const logGuild = await interaction.client.guilds
+          .fetch(config.guilds.logs)
+          .catch(() => null)
+        if (logGuild) {
+          const logChannel =
+            logGuild.channels.cache.get(config.logsChannels.identificacao) ||
+            (await logGuild.channels.fetch(config.logsChannels.identificacao).catch(() => null))
+          if (logChannel && logChannel.isTextBased()) {
+            const logFiles = []
+            if (fs.existsSync(fotoSource)) {
+              logFiles.push(
+                new AttachmentBuilder(fotoSource, { name: 'ident_aceita.png' }),
+              )
+            }
+
+            const embedLogAceita = new EmbedBuilder()
+              .setColor(0x2ecc71)
+              .setAuthor({
+                name: `${config.branding.footerText} - Log de Identificações`,
+                iconURL: guild.iconURL() ?? undefined,
+              })
+              .setTitle('📸 Identificação Aceita (Setagem)')
+              .addFields(
+                {
+                  name: '👤 Oficial',
+                  value: `<@${targetUserId}>`,
+                  inline: true,
+                },
+                {
+                  name: '📅 Data Registro',
+                  value: `<t:${registroUnix}:F>`,
+                  inline: true,
+                },
+                {
+                  name: '⏰ Data Expiração',
+                  value: `<t:${expiracaoUnix}:F>`,
+                  inline: true,
+                },
+              )
+              .setFooter({
+                text: `Sistema de Identificações - ${config.branding.footerText}`,
+                iconURL: interaction.client.user.displayAvatarURL(),
+              })
+              .setTimestamp()
+
+            if (logFiles.length > 0) {
+              embedLogAceita.setImage('attachment://ident_aceita.png')
+            }
+
+            await logChannel.send({ embeds: [embedLogAceita], files: logFiles })
+          }
+        }
+      } catch (err) {
+        console.error('Erro ao enviar log de identificação (setagem) na guild de logs:', err)
+      }
     }
   }
 
