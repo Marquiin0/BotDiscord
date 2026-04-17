@@ -119,37 +119,39 @@ module.exports = {
       // Extrair dados do embed original
       const originalEmbed = interaction.message.embeds[0]
       const fields = originalEmbed.fields || []
-      const nome = fields.find(f => f.name.includes('Nome'))?.value || 'Desconhecido'
-      const idPersonagem = fields.find(f => f.name.includes('ID'))?.value || '0'
-      const unidade = fields.find(f => f.name.includes('Unidade'))?.value || ''
-      const patente = fields.find(f => f.name.includes('Patente'))?.value || 'EST'
+      const nome = fields.find(f => f.name === '📝 Nome')?.value || 'Desconhecido'
+      const idPersonagem = fields.find(f => f.name === '🆔 ID')?.value || '0'
+      const unidade = fields.find(f => f.name === '🏛️ Unidade')?.value || ''
+      const patente = fields.find(f => f.name === '🎖️ Patente')?.value || 'EST'
 
-      // Setar nickname e cargos no server de logs
-      const logsGuild = interaction.client.guilds.cache.get(config.guilds.logs)
-      if (logsGuild) {
-        try {
-          const targetMember = await logsGuild.members.fetch(userId).catch(() => null)
-          if (targetMember) {
-            // Setar nickname: [Patente] Nome | ID
-            const nickname = `[${patente}] ${nome} | ${idPersonagem}`
-            await targetMember.setNickname(nickname).catch(console.error)
+      // Setar nickname e cargos — a interação já está no server de logs
+      const guild = interaction.guild
+      try {
+        const targetMember = await guild.members.fetch(userId)
+        if (targetMember) {
+          // Setar nickname: [Patente] Nome | ID
+          const nickname = `[${patente}] ${nome} | ${idPersonagem}`
+          await targetMember.setNickname(nickname).catch(err => console.error('Erro ao setar nickname:', err))
 
-            // Dar cargo de policial
-            await targetMember.roles.add(config.ftoRoles.policial).catch(console.error)
+          // Dar cargo de policial
+          await targetMember.roles.add(config.ftoRoles.policial).catch(err => console.error('Erro ao dar cargo policial:', err))
 
-            // Dar cargo da unidade
-            const unidadeLower = unidade.toLowerCase().trim()
-            if (unidadeLower.includes('sog') && config.ftoRoles.sog) {
-              await targetMember.roles.add(config.ftoRoles.sog).catch(console.error)
-            } else if (unidadeLower.includes('swat') && config.ftoRoles.swat) {
-              await targetMember.roles.add(config.ftoRoles.swat).catch(console.error)
-            } else if (unidadeLower.includes('ste') && config.ftoRoles.ste) {
-              await targetMember.roles.add(config.ftoRoles.ste).catch(console.error)
-            }
+          // Dar cargo da unidade
+          const unidadeLower = unidade.toLowerCase().trim()
+          if (unidadeLower.includes('sog') && config.ftoRoles.sog) {
+            await targetMember.roles.add(config.ftoRoles.sog).catch(err => console.error('Erro ao dar cargo SOG:', err))
+          } else if (unidadeLower.includes('swat') && config.ftoRoles.swat) {
+            await targetMember.roles.add(config.ftoRoles.swat).catch(err => console.error('Erro ao dar cargo SWAT:', err))
+          } else if (unidadeLower.includes('ste') && config.ftoRoles.ste) {
+            await targetMember.roles.add(config.ftoRoles.ste).catch(err => console.error('Erro ao dar cargo STE:', err))
           }
-        } catch (err) {
-          console.error('Erro ao setar membro no registro FTO:', err)
+
+          console.log(`[Registro FTO] Membro ${userId} aceito: ${nickname}, unidade: ${unidade}`)
+        } else {
+          console.error(`[Registro FTO] Membro ${userId} não encontrado no guild`)
         }
+      } catch (err) {
+        console.error('[Registro FTO] Erro ao setar membro:', err)
       }
 
       // Edita embed para aceito
