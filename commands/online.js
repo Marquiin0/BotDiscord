@@ -1,103 +1,121 @@
 const {
   SlashCommandBuilder,
   EmbedBuilder,
-  PermissionsBitField,
   MessageFlags,
 } = require('discord.js')
-const { PatrolHours } = require('../database')
+const { PatrolSession } = require('../database')
 const config = require('../config')
+const moment = require('moment-timezone')
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('online')
-    .setDescription('Mostra todos os membros online no servidor com suas horas.'),
+    .setDescription('Mostra todos os membros em serviço no jogo.'),
 
   async execute(interaction) {
-    if (
-      !interaction.member.permissions.has(PermissionsBitField.Flags.Administrator) &&
-      !interaction.member.roles.cache.hasAny(...config.permissions.rhPlus)
-    ) {
-      return interaction.reply({
-        content: '❌ Você não tem permissão para usar este comando.',
-        flags: MessageFlags.Ephemeral,
-      })
-    }
-
     await interaction.deferReply({ flags: MessageFlags.Ephemeral })
 
     try {
-      // Busca membros com presença
-      await interaction.guild.members.fetch({ withPresences: true })
+      // Busca todas as sessões abertas (em serviço no jogo)
+      const openSessions = await PatrolSession.findAll({
+        where: { exitTime: null },
+        order: [['entryTime', 'ASC']],
+      })
 
-      const onlineMembers = interaction.guild.members.cache.filter(
-        member =>
-          !member.user.bot &&
-          member.presence &&
-          ['online', 'idle', 'dnd'].includes(member.presence.status),
-      )
-
-      if (onlineMembers.size === 0) {
+      if (openSessions.length === 0) {
         return await interaction.editReply({
-          content: '⚠️ Nenhum membro online encontrado.',
+          content: '⚠️ Nenhum membro em serviço no momento.',
         })
       }
 
-      // Busca horas do BD para cada membro online
-      const memberList = []
-      for (const [, member] of onlineMembers) {
-        const patrol = await PatrolHours.findOne({
-          where: { userId: member.id },
-        })
-
-        const hours = patrol ? patrol.hours.toFixed(1) : '0.0'
-        const statusEmoji =
-          member.presence.status === 'online'
-            ? '🟢'
-            : member.presence.status === 'idle'
-            ? '🟡'
-            : '🔴'
-
-        memberList.push({
-          name: member.displayName,
-          mention: `<@${member.id}>`,
-          status: statusEmoji,
-          hours,
-        })
+      // Buscar membros da guild
+      const guild = interaction.client.guilds.cache.get(config.guilds.main)
+      if (!guild) {
+        return await interaction.editReply({ content: '❌ Servidor principal não encontrado.' })
       }
 
-      // Ordena por horas (maior primeiro)
-      memberList.sort((a, b) => parseFloat(b.hours) - parseFloat(a.hours))
+      await guild.members.fetch()
 
-      // Monta a lista em chunks (limite de embed)
-      const lines = memberList.map(
-        (m, i) => `${m.status} **${i + 1}.** ${m.mention} - \`${m.hours}h\``,
+      // Agrupar por patente
+      const categorias = {}
+      for (const key of config.rankOrder) {
+        const rank = config.ranks[key]
+        categorias[key] = { label: `${rank.tag} ${rank.name}`, members: [] }
+      }
+      const outros = []
+
+      const agora = moment().tz('America/Sao_Paulo')
+
+      for (const session of openSessions) {
+        // Calcular tempo em serviço
+        const entrada = moment(session.entryTime).tz('America/Sao_Paulo')
+        const diff = moment.duration(agora.diff(entrada))
+        const horas = Math.floor(diff.asHours())
+        const minutos = diff.minutes()
+        const tempoText = `⏱️ (${horas}h ${minutos}m)`
+
+        // Buscar membro na guild
+        const member = session.discordId ? guild.members.cache.get(session.discordId) : null
+
+        const display = member
+          ? `${member} ${tempoText}`
+          : `\`${session.memberName} | ${session.inGameId}\` ${tempoText}`
+
+        // Identificar patente do membro
+        if (member) {
+          let found = false
+          for (const key of config.rankOrder) {
+            const rank = config.ranks[key]
+            if (member.roles.cache.has(rank.roleId)) {
+              categorias[key].members.push(display)
+              found = true
+              break
+            }
+          }
+          if (!found) outros.push(display)
+        } else {
+          outros.push(display)
+        }
+      }
+
+      // Montar embed
+      let corpo = ''
+
+      for (const key of config.rankOrder) {
+        const cat = categorias[key]
+        if (cat.members.length > 0) {
+          corpo += `🎖️ **${cat.label}** (${cat.members.length}):\n${cat.members.join('\n')}\n\n`
+        }
+      }
+
+      if (outros.length > 0) {
+        corpo += `🔹 **Outros** (${outros.length}):\n${outros.join('\n')}\n\n`
+      }
+
+      const total = openSessions.length
+      corpo += `📌 **Total em Serviço:** \`${total}\`\n`
+      corpo += `⏰ **Atualizado em:** <t:${Math.floor(Date.now() / 1000)}:f>`
+
+      // Dividir em múltiplos embeds se necessário (limite 4096 chars)
+      const partes = []
+      for (let i = 0; i < corpo.length; i += 4000) {
+        partes.push(corpo.slice(i, i + 4000))
+      }
+
+      const embeds = partes.map((parte, i) =>
+        new EmbedBuilder()
+          .setColor(config.branding.color)
+          .setTitle(i === 0 ? `🟢 Membros em Serviço` : `🟢 Membros em Serviço (continuação)`)
+          .setDescription(parte)
+          .setFooter({ text: config.branding.footerText })
+          .setTimestamp(),
       )
 
-      const chunkSize = 20
-      const embeds = []
-      for (let i = 0; i < lines.length; i += chunkSize) {
-        const chunk = lines.slice(i, i + chunkSize)
-        const embed = new EmbedBuilder()
-          .setColor(config.branding.color)
-          .setTitle(
-            i === 0
-              ? `🟢 Membros Online - ${config.branding.name}`
-              : `🟢 Membros Online (continuação)`,
-          )
-          .setDescription(chunk.join('\n'))
-          .setFooter({
-            text: `Total online: ${onlineMembers.size} | ${config.branding.footerText}`,
-          })
-          .setTimestamp()
-
-        embeds.push(embed)
-      }
-
-      await interaction.editReply({ embeds: embeds.slice(0, 10) }) // Discord limita 10 embeds
+      await interaction.editReply({ embeds: embeds.slice(0, 10) })
     } catch (error) {
       console.error('Erro ao executar /online:', error)
       await interaction.editReply({
-        content: '❌ Ocorreu um erro ao buscar membros online.',
+        content: '❌ Ocorreu um erro ao buscar membros em serviço.',
       })
     }
   },
