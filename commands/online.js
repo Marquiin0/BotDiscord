@@ -7,6 +7,8 @@ const { PatrolSession } = require('../database')
 const config = require('../config')
 const moment = require('moment-timezone')
 
+const MAX_SESSION_HOURS = 12 // Sessões com mais de 12h são marcadas como possivelmente inativas
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('online')
@@ -43,16 +45,28 @@ module.exports = {
         categorias[key] = { label: `${rank.tag} ${rank.name}`, members: [] }
       }
       const outros = []
+      let totalAtivos = 0
+      let totalInativos = 0
 
       const agora = moment().tz('America/Sao_Paulo')
 
       for (const session of openSessions) {
         // Calcular tempo em serviço
         const entrada = moment(session.entryTime).tz('America/Sao_Paulo')
-        const diff = moment.duration(agora.diff(entrada))
-        const horas = Math.floor(diff.asHours())
-        const minutos = diff.minutes()
-        const tempoText = `⏱️ (${horas}h ${minutos}m)`
+        const diffHours = agora.diff(entrada, 'hours', true)
+        const horas = Math.floor(diffHours)
+        const minutos = Math.floor((diffHours - horas) * 60)
+
+        // Sessões com mais de 12h são possivelmente inativas
+        const isStale = diffHours > MAX_SESSION_HOURS
+        const statusIcon = isStale ? '⚠️' : '⏱️'
+        const tempoText = `${statusIcon} (${horas}h ${minutos}m)`
+
+        if (isStale) {
+          totalInativos++
+        } else {
+          totalAtivos++
+        }
 
         // Buscar membro na guild
         const member = session.discordId ? guild.members.cache.get(session.discordId) : null
@@ -92,9 +106,11 @@ module.exports = {
         corpo += `🔹 **Outros** (${outros.length}):\n${outros.join('\n')}\n\n`
       }
 
-      const total = openSessions.length
-      corpo += `📌 **Total em Serviço:** \`${total}\`\n`
-      corpo += `⏰ **Atualizado em:** <t:${Math.floor(Date.now() / 1000)}:f>`
+      corpo += `📌 **Total em Serviço:** \`${totalAtivos}\``
+      if (totalInativos > 0) {
+        corpo += ` | ⚠️ **Possivelmente inativos:** \`${totalInativos}\``
+      }
+      corpo += `\n⏰ **Atualizado em:** <t:${Math.floor(Date.now() / 1000)}:f>`
 
       // Dividir em múltiplos embeds se necessário (limite 4096 chars)
       const partes = []

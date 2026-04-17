@@ -58,6 +58,29 @@ async function checkLongPatrolSessions(client) {
         await session.update({ nextCheckAt: moment().add(3, 'hours').toDate() })
       }
     }
+    // Auto-close: sessões com nextCheckAt = null (DM enviada, nunca respondida) e >6h
+    const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000)
+    const abandonedSessions = await PatrolSession.findAll({
+      where: {
+        exitTime: null,
+        nextCheckAt: null,
+        entryTime: { [Op.lte]: sixHoursAgo },
+      },
+    })
+
+    for (const session of abandonedSessions) {
+      try {
+        const exitTime = new Date(new Date(session.entryTime).getTime() + 3 * 60 * 60 * 1000)
+        await session.update({ exitTime, duration: 3.0 })
+        console.log(`[PatrolCheck] Sessão ${session.id} auto-fechada (sem resposta >6h, 3.0h contabilizadas)`)
+      } catch (e) {
+        console.error(`[PatrolCheck] Erro ao auto-fechar sessão ${session.id}:`, e.message)
+      }
+    }
+
+    if (abandonedSessions.length > 0) {
+      console.log(`[PatrolCheck] ${abandonedSessions.length} sessões abandonadas auto-fechadas`)
+    }
   } catch (err) {
     console.error('[PatrolCheck] Erro geral na verificação:', err)
   }

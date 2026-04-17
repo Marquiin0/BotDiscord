@@ -2,7 +2,7 @@ const config = require('../config')
 const schedule = require('node-schedule')
 const checkExpiredWarnings = require('../utils/checkExpiredWarnings')
 const checkExpiredLoja = require('../utils/checkExpiredLoja')
-const { Warning } = require('../database')
+const { Warning, PatrolSession } = require('../database')
 const updateMemberIDs = require('../utils/updateMembersIDs')
 const { updateHierarchy } = require('../utils/updateHierarchy')
 const patrolCommand = require('../commands/patrulha')
@@ -20,6 +20,7 @@ const { generateWeeklyPatrolReport } = require('../utils/weeklyPatrolReport')
 const { checkLongPatrolSessions } = require('../utils/patrolSessionCheck')
 const { Op } = require('sequelize')
 const { EmbedBuilder } = require('discord.js')
+const moment = require('moment-timezone')
 
 async function fetchMessagesInBatches(channel, limit = 500) {
   let allMessages = []
@@ -155,6 +156,47 @@ module.exports = {
   async execute(client) {
     console.log(`Logado como: ${client.user.tag}`)
     client.botIsReady = true
+
+    // ==================== LIMPEZA DE SESSÕES ÓRFÃS ====================
+    try {
+      const twelveHoursAgo = moment().subtract(12, 'hours').toDate()
+
+      // 1. Fechar sessões abandonadas (>12h, sem nextCheckAt — crash check enviado mas nunca respondido)
+      const abandonedSessions = await PatrolSession.findAll({
+        where: {
+          exitTime: null,
+          nextCheckAt: null,
+          entryTime: { [Op.lte]: twelveHoursAgo },
+        },
+      })
+
+      for (const session of abandonedSessions) {
+        const exitTime = moment(session.entryTime).add(3, 'hours').toDate()
+        await session.update({ exitTime, duration: 3.0, nextCheckAt: null })
+      }
+
+      if (abandonedSessions.length > 0) {
+        console.log(`[Startup] ${abandonedSessions.length} sessões órfãs fechadas (>12h sem resposta)`)
+      }
+
+      // 2. Re-agendar nextCheckAt para sessões abertas que perderam o timer (bot reiniciou)
+      const openSessionsNoCheck = await PatrolSession.findAll({
+        where: {
+          exitTime: null,
+          nextCheckAt: { [Op.lte]: new Date() }, // nextCheckAt já passou
+        },
+      })
+
+      for (const session of openSessionsNoCheck) {
+        await session.update({ nextCheckAt: moment().add(10, 'minutes').toDate() })
+      }
+
+      if (openSessionsNoCheck.length > 0) {
+        console.log(`[Startup] ${openSessionsNoCheck.length} sessões re-agendadas para crash check em 10min`)
+      }
+    } catch (err) {
+      console.error('[Startup] Erro na limpeza de sessões órfãs:', err)
+    }
 
     // Verificação de ausências a cada 12 horas
     setInterval(() => checkExpiredAusencias(client), 12 * 60 * 60 * 1000)
