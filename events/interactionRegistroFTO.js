@@ -122,31 +122,56 @@ module.exports = {
       const nome = fields.find(f => f.name === '📝 Nome')?.value || 'Desconhecido'
       const idPersonagem = fields.find(f => f.name === '🆔 ID')?.value || '0'
       const unidade = fields.find(f => f.name === '🏛️ Unidade')?.value || ''
-      const patente = fields.find(f => f.name === '🎖️ Patente')?.value || 'EST'
 
-      // Setar nickname e cargos — a interação já está no server de logs
-      const guild = interaction.guild
+      // Buscar patente real do server principal
+      let patenteTag = 'EST'
       try {
-        const targetMember = await guild.members.fetch(userId)
+        const mainGuild = interaction.client.guilds.cache.get(config.guilds.main)
+        if (mainGuild) {
+          const mainMember = await mainGuild.members.fetch(userId).catch(() => null)
+          if (mainMember) {
+            for (const key of config.rankOrder) {
+              if (mainMember.roles.cache.has(config.ranks[key].roleId)) {
+                patenteTag = config.ranks[key].tag
+                break
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.error('[Registro FTO] Erro ao buscar patente do server principal:', err)
+      }
+
+      // Setar nickname e cargos no server de logs
+      try {
+        const targetMember = await interaction.guild.members.fetch(userId)
         if (targetMember) {
-          // Setar nickname: [Patente] Nome | ID
-          const nickname = `[${patente}] ${nome} | ${idPersonagem}`
-          await targetMember.setNickname(nickname).catch(err => console.error('Erro ao setar nickname:', err))
+          // Setar nickname: [TAG] Nome | ID (mesma tag do server principal)
+          const nickname = `${patenteTag} ${nome} | ${idPersonagem}`
+          await targetMember.setNickname(nickname).catch(err => console.error('[Registro FTO] Erro nickname:', err))
 
           // Dar cargo de policial
-          await targetMember.roles.add(config.ftoRoles.policial).catch(err => console.error('Erro ao dar cargo policial:', err))
+          if (interaction.guild.roles.cache.has(config.ftoRoles.policial)) {
+            await targetMember.roles.add(config.ftoRoles.policial).catch(err => console.error('[Registro FTO] Erro cargo policial:', err))
+          } else {
+            console.error(`[Registro FTO] Cargo policial ${config.ftoRoles.policial} não encontrado no guild`)
+          }
 
           // Dar cargo da unidade
           const unidadeLower = unidade.toLowerCase().trim()
-          if (unidadeLower.includes('sog') && config.ftoRoles.sog) {
-            await targetMember.roles.add(config.ftoRoles.sog).catch(err => console.error('Erro ao dar cargo SOG:', err))
-          } else if (unidadeLower.includes('swat') && config.ftoRoles.swat) {
-            await targetMember.roles.add(config.ftoRoles.swat).catch(err => console.error('Erro ao dar cargo SWAT:', err))
-          } else if (unidadeLower.includes('ste') && config.ftoRoles.ste) {
-            await targetMember.roles.add(config.ftoRoles.ste).catch(err => console.error('Erro ao dar cargo STE:', err))
+          const unitRoleMap = { sog: config.ftoRoles.sog, swat: config.ftoRoles.swat, ste: config.ftoRoles.ste }
+          for (const [unitKey, roleId] of Object.entries(unitRoleMap)) {
+            if (unidadeLower.includes(unitKey) && roleId) {
+              if (interaction.guild.roles.cache.has(roleId)) {
+                await targetMember.roles.add(roleId).catch(err => console.error(`[Registro FTO] Erro cargo ${unitKey}:`, err))
+              } else {
+                console.error(`[Registro FTO] Cargo ${unitKey} ${roleId} não encontrado no guild`)
+              }
+              break
+            }
           }
 
-          console.log(`[Registro FTO] Membro ${userId} aceito: ${nickname}, unidade: ${unidade}`)
+          console.log(`[Registro FTO] Membro ${userId} aceito: ${patenteTag} ${nome} | ${idPersonagem}, unidade: ${unidade}`)
         } else {
           console.error(`[Registro FTO] Membro ${userId} não encontrado no guild`)
         }
