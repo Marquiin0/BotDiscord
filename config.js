@@ -69,6 +69,7 @@ module.exports = {
         aceitarRegistro: '1477473907563823117', // Aceitar/recusar registros
         ticketsLogs: '1477473907563823118',  // Tickets do server de logs
         setUnidades: '1477473908826443830',  // Log de set de unidades
+        acao: '1477473908260208810',         // Log ações (source FiveM)
     },
 
     // ==================== CATEGORIAS ====================
