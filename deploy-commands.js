@@ -21,6 +21,7 @@ const rest = new REST({ version: '9' }).setToken(process.env.TOKEN);
 const guildIds = [
     process.env.GUILD_ID,
     ...config.battalions.map(b => b.guildId),
+    config.guilds.logs,
 ];
 
 (async () => {
