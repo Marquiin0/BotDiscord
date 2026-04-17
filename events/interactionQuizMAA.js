@@ -330,7 +330,15 @@ async function finishQuiz(guild, userId, reason) {
     .setFooter({ text: config.branding.footerText })
     .setTimestamp()
 
-  await channel.send({ embeds: [resultEmbed] })
+  // Envia resultado na DM do usuário
+  try {
+    const user = await guild.client.users.fetch(userId)
+    await user.send({ embeds: [resultEmbed] })
+  } catch (e) {
+    // Se não conseguir enviar DM, envia no canal do quiz como fallback
+    console.error('Erro ao enviar DM com resultado do quiz MAA:', e)
+    await channel.send({ embeds: [resultEmbed] })
+  }
 
   // Envia resultado no servidor de logs
   try {
