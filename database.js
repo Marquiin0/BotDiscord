@@ -848,6 +848,16 @@ WeeklyPoints.sync()
 Ausencia.sync()
 PatrolSession.sync()
 
+// Blacklist de unidades (impede entrada em unidades por 7 dias)
+const Blacklist = sequelize.define('Blacklist', {
+    userId: { type: DataTypes.STRING, allowNull: false },
+    unitName: { type: DataTypes.STRING, allowNull: false },
+    reason: { type: DataTypes.TEXT, allowNull: false },
+    appliedBy: { type: DataTypes.STRING, allowNull: false },
+    expirationDate: { type: DataTypes.DATE, allowNull: false },
+})
+Blacklist.sync()
+
 // Key-value store para configurações persistentes do bot (IDs de mensagens, etc.)
 const BotConfig = sequelize.define('BotConfig', {
     key: { type: DataTypes.STRING, primaryKey: true, allowNull: false },
@@ -891,6 +901,7 @@ module.exports = {
     ArsenalProcessedLog,
     ArsenalIsento,
     PatrolSession,
+    Blacklist,
     BotConfig,
 };
 

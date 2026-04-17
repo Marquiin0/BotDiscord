@@ -131,21 +131,7 @@ async function showUserInfo(interaction, targetUserId, ephemeral = true) {
       },
       raw: true,
     })
-    let accumulatedHours = accumulatedData ? parseFloat(accumulatedData.totalHours) : 0
-
-    // Incluir sessões abertas desde a última promoção (cap 12h por sessão)
-    const openAccumSessions = await PatrolSession.findAll({
-      where: {
-        discordId: targetUserId,
-        exitTime: null,
-        entryTime: { [Op.gte]: lastPromotionDate },
-      },
-      raw: true,
-    })
-    for (const s of openAccumSessions) {
-      const elapsed = moment().diff(moment(s.entryTime), 'hours', true)
-      accumulatedHours += Math.min(elapsed, 12)
-    }
+    const accumulatedHours = accumulatedData ? parseFloat(accumulatedData.totalHours) : 0
 
     // Contagem de cursos de ação completados
     const actionCourseCount = config.actionCourseRoles.filter(roleId =>
@@ -179,24 +165,8 @@ async function showUserInfo(interaction, targetUserId, ephemeral = true) {
       ? new Date(promotionRecord.lastPromotionDate).toLocaleDateString('pt-BR')
       : 'Sem registro'
 
-    // Horas semanais (PatrolSession) — inclui sessões abertas
-    let totalHoursNum = patrolData ? parseFloat(patrolData.totalHours) : 0
-
-    // Buscar sessões abertas da semana e somar tempo on-the-fly (cap 12h por sessão)
-    const openWeekSessions = await PatrolSession.findAll({
-      where: {
-        discordId: targetUserId,
-        weekStart: moment().tz('America/Sao_Paulo').startOf('week').toDate(),
-        exitTime: null,
-      },
-      raw: true,
-    })
-    for (const s of openWeekSessions) {
-      const elapsed = moment().diff(moment(s.entryTime), 'hours', true)
-      totalHoursNum += Math.min(elapsed, 12) // cap de 12h por sessão aberta
-    }
-
-    const totalHours = totalHoursNum.toFixed(1)
+    // Horas semanais (PatrolSession) — só conta sessões fechadas (entrada + saída de toggle)
+    const totalHours = patrolData ? parseFloat(patrolData.totalHours).toFixed(1) : '0.0'
 
     // Identifica patente atual
     let currentRank = 'Sem patente'

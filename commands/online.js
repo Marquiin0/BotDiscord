@@ -7,7 +7,11 @@ const { PatrolSession } = require('../database')
 const config = require('../config')
 const moment = require('moment-timezone')
 
-const MAX_SESSION_HOURS = 12 // Sessões com mais de 12h são marcadas como possivelmente inativas
+// Patentes que aparecem separadas (Alto Comando)
+const HIGH_COMMAND_RANKS = ['CMD', 'SCMD', 'HC', 'SC', 'IA']
+
+// Limite máximo de sessão ativa (horas)
+const MAX_SESSION_HOURS = 12
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -30,7 +34,6 @@ module.exports = {
         })
       }
 
-      // Buscar membros da guild
       const guild = interaction.client.guilds.cache.get(config.guilds.main)
       if (!guild) {
         return await interaction.editReply({ content: '❌ Servidor principal não encontrado.' })
@@ -38,70 +41,108 @@ module.exports = {
 
       await guild.members.fetch()
 
-      // Agrupar por patente
-      const categorias = {}
-      for (const key of config.rankOrder) {
-        const rank = config.ranks[key]
-        categorias[key] = { label: `${rank.tag} ${rank.name}`, members: [] }
+      // Mapa de roleId de unidade → nome da unidade
+      const unitMap = {}
+      for (const bat of config.battalions) {
+        unitMap[bat.mainRoleId] = bat.roleName
       }
-      const outros = []
+
+      // Categorias
+      const altoComando = {} // rankKey -> { label, members[] }
+      for (const key of HIGH_COMMAND_RANKS) {
+        const rank = config.ranks[key]
+        if (rank) altoComando[key] = { label: `${rank.tag} ${rank.name}`, members: [] }
+      }
+
+      const unidades = {} // unitName -> members[]
+      for (const bat of config.battalions) {
+        unidades[bat.roleName] = []
+      }
+      const patrulha = [] // membros sem unidade e que não são HC+
+      const outros = [] // sem Discord ID ou sem patente
+
       let totalAtivos = 0
       let totalInativos = 0
-
       const agora = moment().tz('America/Sao_Paulo')
 
       for (const session of openSessions) {
-        // Calcular tempo em serviço
         const entrada = moment(session.entryTime).tz('America/Sao_Paulo')
         const diffHours = agora.diff(entrada, 'hours', true)
         const horas = Math.floor(diffHours)
         const minutos = Math.floor((diffHours - horas) * 60)
 
-        // Sessões com mais de 12h são possivelmente inativas
         const isStale = diffHours > MAX_SESSION_HOURS
-        const statusIcon = isStale ? '⚠️' : '⏱️'
-        const tempoText = `${statusIcon} (${horas}h ${minutos}m)`
-
         if (isStale) {
           totalInativos++
         } else {
           totalAtivos++
         }
 
-        // Buscar membro na guild
+        const statusIcon = isStale ? '⚠️' : '⏱️'
+        const tempoText = `${statusIcon} (${horas}h ${minutos}m)`
+
         const member = session.discordId ? guild.members.cache.get(session.discordId) : null
 
-        const display = member
-          ? `${member} ${tempoText}`
-          : `\`${session.memberName} | ${session.inGameId}\` ${tempoText}`
+        if (!member) {
+          outros.push(`\`${session.memberName} | ${session.inGameId}\` ${tempoText}`)
+          continue
+        }
 
-        // Identificar patente do membro
-        if (member) {
-          let found = false
-          for (const key of config.rankOrder) {
-            const rank = config.ranks[key]
-            if (member.roles.cache.has(rank.roleId)) {
-              categorias[key].members.push(display)
-              found = true
-              break
-            }
+        const display = `${member} | ${session.inGameId} ${tempoText}`
+
+        // Verificar se é Alto Comando
+        let isHC = false
+        for (const key of HIGH_COMMAND_RANKS) {
+          const rank = config.ranks[key]
+          if (rank && member.roles.cache.has(rank.roleId)) {
+            altoComando[key].members.push(display)
+            isHC = true
+            break
           }
-          if (!found) outros.push(display)
-        } else {
-          outros.push(display)
+        }
+
+        if (isHC) continue
+
+        // Verificar unidade
+        let unitFound = false
+        for (const bat of config.battalions) {
+          if (member.roles.cache.has(bat.mainRoleId)) {
+            unidades[bat.roleName].push(display)
+            unitFound = true
+            break
+          }
+        }
+
+        if (!unitFound) {
+          patrulha.push(display)
         }
       }
 
       // Montar embed
       let corpo = ''
 
-      for (const key of config.rankOrder) {
-        const cat = categorias[key]
-        if (cat.members.length > 0) {
+      // Alto Comando (cada patente separada)
+      for (const key of HIGH_COMMAND_RANKS) {
+        const cat = altoComando[key]
+        if (cat && cat.members.length > 0) {
           corpo += `🎖️ **${cat.label}** (${cat.members.length}):\n${cat.members.join('\n')}\n\n`
         }
       }
 
+      // Unidades
+      for (const bat of config.battalions) {
+        const members = unidades[bat.roleName]
+        if (members && members.length > 0) {
+          corpo += `🛡️ **${bat.roleName}** (${members.length}):\n${members.join('\n')}\n\n`
+        }
+      }
+
+      // Patrulha (sem unidade)
+      if (patrulha.length > 0) {
+        corpo += `👮 **Patrulha** (${patrulha.length}):\n${patrulha.join('\n')}\n\n`
+      }
+
+      // Outros (sem Discord ID vinculado)
       if (outros.length > 0) {
         corpo += `🔹 **Outros** (${outros.length}):\n${outros.join('\n')}\n\n`
       }
@@ -121,7 +162,7 @@ module.exports = {
       const embeds = partes.map((parte, i) =>
         new EmbedBuilder()
           .setColor(config.branding.color)
-          .setTitle(i === 0 ? `🟢 Membros em Serviço` : `🟢 Membros em Serviço (continuação)`)
+          .setTitle(i === 0 ? '🟢 Membros em Serviço' : '🟢 Membros em Serviço (continuação)')
           .setDescription(parte)
           .setFooter({ text: config.branding.footerText })
           .setTimestamp(),

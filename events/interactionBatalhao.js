@@ -9,6 +9,7 @@ const {
   MessageFlags,
 } = require('discord.js')
 const config = require('../config')
+const { Blacklist } = require('../database')
 
 module.exports = {
   name: 'interactionCreate',
@@ -119,6 +120,17 @@ module.exports = {
         return interaction.editReply({ content: '❌ Este servidor não está configurado como batalhão.' })
       }
 
+      // Verificar se o membro está na blacklist de unidades
+      const blacklistRecord = await Blacklist.findOne({ where: { userId } })
+      if (blacklistRecord) {
+        const expDate = new Date(blacklistRecord.expirationDate).toLocaleDateString('pt-BR')
+        return interaction.editReply({
+          content: `❌ Este membro está na **blacklist de unidades** até **${expDate}**.\n` +
+            `Motivo: ${blacklistRecord.reason}\n` +
+            `Unidade de origem: ${blacklistRecord.unitName}`,
+        })
+      }
+
       const member = await interaction.guild.members.fetch(userId).catch(() => null)
       if (!member) {
         return interaction.editReply({ content: '❌ Membro não encontrado no servidor.' })
@@ -170,6 +182,37 @@ module.exports = {
         .addFields({ name: 'Status', value: `✅ Aprovado por <@${interaction.user.id}>` })
 
       await interaction.message.edit({ embeds: [originalEmbed], components: [] })
+
+      // Enviar log no canal de set de unidades (servidor de logs)
+      try {
+        const logsGuild = client.guilds.cache.get(config.guilds.logs)
+        if (logsGuild) {
+          const setChannel = logsGuild.channels.cache.get(config.logsChannels.setUnidades)
+          if (setChannel) {
+            const embedFields = interaction.message.embeds[0]?.fields || []
+            const nome = embedFields.find(f => f.name === 'Nome')?.value || 'N/A'
+            const id = embedFields.find(f => f.name === 'ID')?.value || 'N/A'
+
+            const logEmbed = new EmbedBuilder()
+              .setColor('#2ECC71')
+              .setTitle('🎖️ Set de Unidade')
+              .setDescription('Um oficial foi aprovado em uma unidade.')
+              .addFields(
+                { name: '👤 Oficial', value: `<@${userId}>`, inline: true },
+                { name: '🛡️ Unidade', value: battalion.roleName, inline: true },
+                { name: '📝 Nome', value: nome, inline: true },
+                { name: '🆔 ID', value: id, inline: true },
+                { name: '✅ Aprovado por', value: `<@${interaction.user.id}>`, inline: true },
+              )
+              .setFooter({ text: config.branding.footerText })
+              .setTimestamp()
+
+            await setChannel.send({ embeds: [logEmbed] })
+          }
+        }
+      } catch (err) {
+        console.error('[Batalhão] Erro ao enviar log de set de unidade:', err)
+      }
 
       const lines = [`✅ Set de <@${userId}> aprovado no **${battalion.roleName}**!`]
       if (mainGranted) {

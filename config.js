@@ -45,6 +45,7 @@ module.exports = {
         arsenalAlerta: '1477408728679714903',        // Alertas de infrações do arsenal
         saidaAlerta: '1477408728679714904',          // Alertas de saída (saiu da org / saiu do servidor)
         requisitos: '1494363413873299746',             // Canal de requisitos de promoção
+        blackUnidades: '1494770890058109030',          // Canal de blacklist de unidades
     },
 
     // ==================== CANAIS (Servidor de Logs) ====================
@@ -161,6 +162,7 @@ module.exports = {
         rh: '1477408727270166607',            // Recursos Humanos (cargo funcional)
         recruta: '1477408727052193974',     // Cargo recruta (setagem)
         membro: '1477408727236874244',      // Cargo membro base (= EST)
+        blacklistUnidade: '1477408727052193979', // Blacklist de unidade (7 dias)
     },
 
     // ==================== MEDALHAS ====================
@@ -228,6 +230,12 @@ module.exports = {
             '1477408727295463435',  // H.C
             '1477408727295463436',  // SCMD
             '1477408727295463437',  // CMD
+        ],
+        // Comandos de unidade (podem usar /black)
+        unitCommands: [
+            '1477408727253647561',  // SOG Command
+            '1477408727253647560',  // STE Command
+            '1477408727253647559',  // SWAT Command
         ],
         // Limite de promoção/rebaixamento por cargo
         // CMD e SCMD não tem limite (admin)

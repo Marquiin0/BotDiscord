@@ -8,6 +8,7 @@ async function checkLongPatrolSessions(client) {
   try {
     const now = new Date()
 
+    // 1. Enviar DM de crash check para sessões que atingiram o nextCheckAt
     const sessions = await PatrolSession.findAll({
       where: {
         exitTime: null,
@@ -52,13 +53,12 @@ async function checkLongPatrolSessions(client) {
 
         console.log(`[PatrolCheck] DM enviada para ${user.tag} (sessão ${session.id}, ${hoursOnDuty.toFixed(1)}h)`)
       } catch (err) {
-        // Usuário com DMs desabilitadas ou erro ao enviar
         console.error(`[PatrolCheck] Erro ao enviar DM para ${session.discordId}:`, err.message)
-        // Avança nextCheckAt para não ficar tentando indefinidamente
         await session.update({ nextCheckAt: moment().add(3, 'hours').toDate() })
       }
     }
-    // Auto-close: sessões com nextCheckAt = null (DM enviada, nunca respondida) e >6h
+
+    // 2. Auto-close: sessões sem resposta ao crash check (nextCheckAt = null, >6h)
     const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000)
     const abandonedSessions = await PatrolSession.findAll({
       where: {
@@ -78,8 +78,28 @@ async function checkLongPatrolSessions(client) {
       }
     }
 
-    if (abandonedSessions.length > 0) {
-      console.log(`[PatrolCheck] ${abandonedSessions.length} sessões abandonadas auto-fechadas`)
+    // 3. Auto-close forçado: QUALQUER sessão aberta >12h (segurança contra sessões órfãs)
+    const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000)
+    const staleSessions = await PatrolSession.findAll({
+      where: {
+        exitTime: null,
+        entryTime: { [Op.lte]: twelveHoursAgo },
+      },
+    })
+
+    for (const session of staleSessions) {
+      try {
+        const exitTime = new Date(new Date(session.entryTime).getTime() + 3 * 60 * 60 * 1000)
+        await session.update({ exitTime, duration: 3.0, nextCheckAt: null })
+        console.log(`[PatrolCheck] Sessão ${session.id} forçada a fechar (>12h, 3.0h contabilizadas)`)
+      } catch (e) {
+        console.error(`[PatrolCheck] Erro ao forçar fechamento de sessão ${session.id}:`, e.message)
+      }
+    }
+
+    const totalClosed = abandonedSessions.length + staleSessions.length
+    if (totalClosed > 0) {
+      console.log(`[PatrolCheck] ${totalClosed} sessões auto-fechadas no total`)
     }
   } catch (err) {
     console.error('[PatrolCheck] Erro geral na verificação:', err)

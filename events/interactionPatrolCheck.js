@@ -1,5 +1,5 @@
 const { PatrolSession } = require('../database')
-const { MessageFlags } = require('discord.js')
+const { MessageFlags, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js')
 const moment = require('moment-timezone')
 
 module.exports = {
@@ -28,6 +28,23 @@ module.exports = {
 
         // Próxima verificação em 3 horas
         await session.update({ nextCheckAt: moment().add(3, 'hours').toDate() })
+
+        // Desabilitar botões da mensagem
+        const disabledRow = new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId(`patrol_done_playing_${session.id}`)
+            .setLabel('Ainda estou no jogo')
+            .setStyle(ButtonStyle.Success)
+            .setEmoji('🎮')
+            .setDisabled(true),
+          new ButtonBuilder()
+            .setCustomId(`patrol_done_crashed_${session.id}`)
+            .setLabel('Crashei')
+            .setStyle(ButtonStyle.Secondary)
+            .setEmoji('💥')
+            .setDisabled(true),
+        )
+        await interaction.message.edit({ components: [disabledRow] })
 
         await interaction.reply({
           content: '✅ Sessão confirmada! Suas horas continuam sendo contabilizadas. Próxima verificação em 3 horas.',
@@ -70,6 +87,23 @@ module.exports = {
           duration,
           nextCheckAt: null,
         })
+
+        // Desabilitar botões da mensagem
+        const disabledRow = new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId(`patrol_done_playing_${session.id}`)
+            .setLabel('Ainda estou no jogo')
+            .setStyle(ButtonStyle.Secondary)
+            .setEmoji('🎮')
+            .setDisabled(true),
+          new ButtonBuilder()
+            .setCustomId(`patrol_done_crashed_${session.id}`)
+            .setLabel('Crashei')
+            .setStyle(ButtonStyle.Danger)
+            .setEmoji('💥')
+            .setDisabled(true),
+        )
+        await interaction.message.edit({ components: [disabledRow] })
 
         await interaction.reply({
           content: `✅ Sessão encerrada. Foram contabilizadas **3.0h** de patrulha. Quando voltar ao jogo, entre em toggle novamente para iniciar uma nova sessão.`,

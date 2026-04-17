@@ -2,6 +2,7 @@ const config = require('../config')
 const schedule = require('node-schedule')
 const checkExpiredWarnings = require('../utils/checkExpiredWarnings')
 const checkExpiredLoja = require('../utils/checkExpiredLoja')
+const checkExpiredBlacklist = require('../utils/checkExpiredBlacklist')
 const { Warning, PatrolSession } = require('../database')
 const updateMemberIDs = require('../utils/updateMembersIDs')
 const { updateHierarchy } = require('../utils/updateHierarchy')
@@ -238,6 +239,11 @@ module.exports = {
     setInterval(() => {
       checkExpiredLoja(client)
     }, 23200)
+
+    // Blacklist de unidades expirada
+    setInterval(() => {
+      checkExpiredBlacklist(client)
+    }, 60000) // Verifica a cada 1 minuto
 
     // Apostas expiradas
     setInterval(() => {
