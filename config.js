@@ -146,7 +146,7 @@ module.exports = {
 
     // ==================== PERMISSÕES (quem pode usar corregedoria etc) ====================
     permissions: {
-        rec: ['1477473906863505589', '1496261811371249825'], // Cargos autorizados /registrar-rec (FTO)
+        rec: ['1496999612127514644', '1496999134551605399'], // Cargos autorizados /registrar-rec (FTO)
         corregedoria: [
             '1477408727270166606',  // I.C
             '1477408727295463435',  // H.C
