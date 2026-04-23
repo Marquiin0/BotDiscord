@@ -207,13 +207,15 @@ module.exports = {
       }
     }, 900000)
 
-    // Atualizar hierarquia (Eclipse Police)
+    // Atualizar hierarquia: principal caminho é event-driven
+    // (events/guildMember{Update,Add,Remove}.js). Este timer é safety net
+    // pra capturar qualquer evento perdido.
     setInterval(async () => {
       const guild = client.guilds.cache.get(config.guilds.main)
       if (guild) {
         await updateHierarchy(guild, config.channels.hierarquia)
       }
-    }, 300000) // 5 minutos
+    }, 1800000) // 30 minutos
 
     // Chama a função que apaga automaticamente canais "registro-"
     deleteProvaChannels(client)

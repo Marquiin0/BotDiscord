@@ -24,15 +24,15 @@ for (const key of config.rankOrder) {
   roleCategoryMap[rank.roleId] = { category: rank.name }
 }
 const rolePriority = config.rankOrder.map(key => config.ranks[key].name)
+const hierarchyRoleIds = new Set(Object.keys(roleCategoryMap))
 
-async function buildHierarchyMessage(guild) {
-  const localTime = DateTime.now()
-    .setZone('America/Sao_Paulo')
-    .toFormat('dd/MM/yyyy, HH:mm:ss')
+const TIMESTAMP_SUFFIX_RE = /\n\n\*Atualizado em [^*]*\*\s*$/
+
+async function buildHierarchyCore(guild) {
   const hierarchy = {}
   for (const role of rolePriority) hierarchy[role] = []
-
   let totalContingent = 0
+
   try {
     await guild.members.fetch()
   } catch (error) {
@@ -58,7 +58,7 @@ async function buildHierarchyMessage(guild) {
     msg += `# **${role}:** \`${members.length}\`\n`
     msg += members.length ? members.join('\n') + '\n\n' : 'Sem ocupantes.\n\n'
   }
-  msg += `# **Total de contingente: \`${totalContingent}\`**\n\n*Atualizado em ${localTime}*`
+  msg += `# **Total de contingente: \`${totalContingent}\`**`
   return msg
 }
 
@@ -69,19 +69,26 @@ async function updateHierarchy(guild, channelId) {
     return
   }
 
-  const content = await buildHierarchyMessage(guild)
-  if (!content) return
+  const core = await buildHierarchyCore(guild)
+  if (core === null) return
+
+  const localTime = DateTime.now()
+    .setZone('America/Sao_Paulo')
+    .toFormat('dd/MM/yyyy, HH:mm:ss')
+  const content = `${core}\n\n*Atualizado em ${localTime}*`
 
   try {
     const storedId = loadMessageId()
     if (storedId) {
-      try {
-        const existing = await channel.messages.fetch(storedId)
-        if (existing.content !== content) await existing.edit(content)
+      const existing = await channel.messages.fetch(storedId).catch(() => null)
+      if (existing) {
+        // Compara ignorando o timestamp — só edita se os dados mudaram.
+        const existingCore = existing.content.replace(TIMESTAMP_SUFFIX_RE, '')
+        if (existingCore === core) return
+        await existing.edit(content)
         return
-      } catch {
-        console.log('Mensagem de hierarquia anterior não encontrada. Recriando.')
       }
+      console.log('Mensagem de hierarquia anterior não encontrada. Recriando.')
     }
 
     const newMessage = await channel.send(content)
@@ -91,4 +98,22 @@ async function updateHierarchy(guild, channelId) {
   }
 }
 
-module.exports = { updateHierarchy }
+// Debounce: rajadas de eventos (ex: promoção em lote, vários membros
+// mudando cargo em sequência) coalescem numa única atualização.
+let debounceTimer = null
+let pendingGuild = null
+function scheduleHierarchyUpdate(guild) {
+  if (!guild || guild.id !== config.guilds.main) return
+  pendingGuild = guild
+  if (debounceTimer) clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(() => {
+    debounceTimer = null
+    const g = pendingGuild
+    pendingGuild = null
+    updateHierarchy(g, config.channels.hierarquia).catch(err =>
+      console.error('[updateHierarchy] debounced:', err),
+    )
+  }, 3000)
+}
+
+module.exports = { updateHierarchy, scheduleHierarchyUpdate, hierarchyRoleIds }
