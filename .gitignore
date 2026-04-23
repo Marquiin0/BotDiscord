@@ -6,3 +6,4 @@ desktop.ini
 backups/
 dump.sql
 dump_postgres.sql
+.claude/
