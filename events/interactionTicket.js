@@ -168,7 +168,8 @@ module.exports = {
   name: Events.InteractionCreate,
   async execute(interaction) {
     if (interaction.deferred || interaction.replied) return
-    const transcriptsPath = '/var/www/transcripts'
+    const transcriptsPath =
+      process.env.TRANSCRIPTS_DIR || path.join(__dirname, '..', 'transcripts')
     if (!fs.existsSync(transcriptsPath)) {
       fs.mkdirSync(transcriptsPath, { recursive: true })
     }

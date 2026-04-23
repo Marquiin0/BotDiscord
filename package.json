@@ -23,7 +23,15 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy": "node scripts/deploy.js",
+    "deploy:status": "node scripts/deploy.js status",
+    "deploy:logs": "node scripts/deploy.js logs",
+    "deploy:restart": "node scripts/deploy.js restart"
+  },
+  "devDependencies": {
+    "archiver": "^7.0.1"
   },
   "keywords": [],
   "author": "Campin",
