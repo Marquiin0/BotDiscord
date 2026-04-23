@@ -129,8 +129,8 @@ module.exports = {
       }
     }
 
-    // 11) ID do membro
-    const memberIdRecord = await MemberID.findOne({ where: { discordId: userId } })
+    // 11) ID do membro (memberId = Discord snowflake, discordId = ID no jogo)
+    const memberIdRecord = await MemberID.findOne({ where: { memberId: userId } })
 
     // 12) Data de entrada
     const joinDate = targetMember.joinedAt
@@ -145,7 +145,7 @@ module.exports = {
       .setThumbnail(targetUser.displayAvatarURL({ dynamic: true }))
       .addFields(
         { name: '🎖️ Patente', value: currentRank, inline: true },
-        { name: '🆔 ID', value: memberIdRecord ? memberIdRecord.memberId : 'N/A', inline: true },
+        { name: '🆔 ID', value: memberIdRecord ? memberIdRecord.discordId : 'N/A', inline: true },
         { name: '📅 Entrada', value: joinDate, inline: true },
         { name: '📈 Último Up', value: lastPromotionDate, inline: true },
         { name: '⏰ Horas Totais', value: `${patrolHours.toFixed(1)}h`, inline: true },
