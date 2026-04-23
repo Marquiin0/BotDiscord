@@ -91,6 +91,7 @@ module.exports = {
       canal = await interaction.guild.channels.create({
         name: `rec-${interaction.user.username.toLowerCase().replace(/[^a-z0-9]/g, '')}`,
         type: ChannelType.GuildText,
+        parent: config.categories.recPrivado,
         permissionOverwrites: [
           { id: interaction.guild.id, deny: [PermissionFlagsBits.ViewChannel] },
           {
@@ -114,6 +115,7 @@ module.exports = {
       })
     } catch (err) {
       console.error('[REC] Erro ao criar canal:', err)
+      await interaction.editReply({ content: '❌ Não foi possível criar o canal de recrutamento. Verifique as permissões do bot.' }).catch(() => {})
       return
     }
 

@@ -59,6 +59,7 @@ module.exports = {
         acoes: '1477408729728155705',        // Categoria relatórios de ações + setagem
         cursoQuiz: '1477408729509920851',    // Categoria para quizzes do curso MAA
         tickets: '1477408728884969654',      // Categoria para tickets
+        recPrivado: '1494500619334193212',   // Categoria para canais privados de REC (FTO)
     },
 
     // ==================== CARGOS DE PATENTE (ordem: CMD -> EST) ====================
