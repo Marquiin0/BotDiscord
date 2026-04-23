@@ -50,6 +50,7 @@ module.exports = {
         rebaixamento: '1477473908402946129', // Log rebaixamentos
         promocao: '1477473908402946129',    // Log promoções
         corregedoria: '1477473908587233434', // Log advertências/exonerações
+        setUnidades: '1477473908826443830',  // Log de set de unidades (batalhões)
     },
 
     // ==================== CATEGORIAS ====================
@@ -225,4 +226,48 @@ module.exports = {
 
     // ==================== OWNER ====================
     ownerId: '233987539264995328',
+
+    // ==================== BATALHÕES ====================
+    battalions: [
+        {
+            guildId: '1481606531160997953',
+            channelId: '1481606532184670261',
+            approvalChannelId: '1481718192782184658',
+            roleIds: ['1481718994229661868', '1481722975559356446'],
+            roleName: 'S.W.A.T',
+            mainRoleId: '1481720985743921455',
+            imagePath: './assets/swat.png',
+        },
+        {
+            guildId: '1483574861866602756',
+            channelId: '1483574862747275406',
+            approvalChannelId: '1483574862747275408',
+            roleIds: ['1483574861866602757', '1483574861866602762'],
+            roleName: 'S.O.G',
+            mainRoleId: '1477408727253647556',
+            imagePath: './assets/sog.png',
+        },
+        {
+            guildId: '1483575520577720502',
+            channelId: '1483575521009991818',
+            approvalChannelId: '1483575521009991820',
+            roleIds: ['1483575520577720508', '1483575520577720509'],
+            roleName: 'S.T.E',
+            mainRoleId: '1477408727253647555',
+            imagePath: './assets/ste.png',
+            visitorRoleId: '1483575520577720506',
+            nickTag: '[STE-R]',
+        },
+        {
+            guildId: '1474523272732344390',
+            channelId: '1474523278373556256',
+            approvalChannelId: '1483599311068463205',
+            roleIds: ['1474523272732344397', '1477521710218477588'],
+            roleName: 'MerryWeather',
+            mainRoleId: '1477408727253647557',
+            imagePath: './assets/merryweather_banner.gif',
+            thumbnailPath: './assets/merryweather_thumbnail.webp',
+            fotoPath: './assets/merryweather_foto.png',
+        },
+    ],
 };

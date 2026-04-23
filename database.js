@@ -783,6 +783,14 @@ const VictoryDefeat = sequelize.define('VictoryDefeat', {
     timestamps: true,
 });
 
+const Blacklist = sequelize.define('Blacklist', {
+    userId: { type: DataTypes.STRING, allowNull: false },
+    unitName: { type: DataTypes.STRING, allowNull: false },
+    reason: { type: DataTypes.TEXT, allowNull: false },
+    appliedBy: { type: DataTypes.STRING, allowNull: false },
+    expirationDate: { type: DataTypes.DATE, allowNull: false },
+});
+
 sequelize.sync({ alter: false }).catch(err => {
     console.error('[DB] Erro ao sincronizar tabelas:', err.message);
 });
@@ -795,6 +803,7 @@ module.exports = {
     MemberID,
     PatrolHours,
     PatrolSession,
+    Blacklist,
     WeaponLog,
     WeeklyPoints,
     Ausencia,
