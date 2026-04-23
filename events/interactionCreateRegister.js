@@ -203,47 +203,6 @@ module.exports = {
       }
     }
 
-    // Slash Commands
-    else if (interaction.isCommand()) {
-      if (interaction.commandName === 'patrulha') {
-        const fetchPatrolLogs = require('../commands/patrulha.js')
-        try {
-          await fetchPatrolLogs.execute(interaction, client)
-        } catch (error) {
-          console.error(error)
-          if (!interaction.replied && !interaction.deferred) {
-            await interaction
-              .reply({
-                content: 'Houve um erro ao executar o comando patrulha!',
-                flags: MessageFlags.Ephemeral,
-              })
-              .catch(console.error)
-          }
-        }
-      } else {
-        // Comandos já tratados em event handlers dedicados — não executar aqui
-        const handledElsewhere = []
-        if (handledElsewhere.includes(interaction.commandName)) return
-
-        const command = client.commands.get(interaction.commandName)
-        if (!command) return
-
-        try {
-          await command.execute(interaction, client)
-        } catch (error) {
-          console.error(error)
-          if (!interaction.replied && !interaction.deferred) {
-            await interaction
-              .reply({
-                content: 'Houve um erro ao executar o comando!',
-                flags: MessageFlags.Ephemeral,
-              })
-              .catch(console.error)
-          }
-        }
-      }
-    }
-
     // Modal Submit
     else if (interaction.isModalSubmit()) {
       if (interaction.customId === 'prova_form') {
