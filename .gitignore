@@ -7,3 +7,10 @@ backups/
 dump.sql
 dump_postgres.sql
 .claude/
+
+# Estado runtime escrito pelo bot (não versionar)
+utils/hierarchyMessageId.json
+utils/leaderboardMessageId.json
+events/ticketCounter.json
+identificationMessages.json
+sugerirVotes.json

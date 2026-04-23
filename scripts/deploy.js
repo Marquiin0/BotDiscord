@@ -23,25 +23,34 @@ const APP_ID = process.env.DISCLOUD_APP_ID || '1776281039305'
 const TOKEN = process.env.DISCLOUD_TOKEN
 const API = 'https://api.discloud.app/v2'
 
-// Itens do projeto que NÃO devem ir pro zip de deploy.
-const EXCLUDE = new Set([
-  'node_modules',
-  '.git',
-  '.github',
-  '.claude',
-  '.vscode',
-  'backups',
-  'scripts',
+// Padrões glob (relativos à raiz) que NÃO devem ir pro zip de deploy.
+// Inclui dirs de dev, artefatos locais e arquivos de estado escritos em runtime
+// pelo bot (sobrescrever esses quebraria hierarquia, tickets, votos, etc).
+const EXCLUDE_GLOB = [
+  'node_modules/**',
+  '.git/**',
+  '.github/**',
+  '.claude/**',
+  '.vscode/**',
+  'backups/**',
+  'scripts/**',
   '.env',
   '.env.local',
   'database.sqlite',
+  '**/*.sqlite',
   'desktop.ini',
   'dump.sql',
   'dump_postgres.sql',
   'sql-logs.txt',
   'sql-errors.txt',
   'relatorio.csv',
-])
+  // Estado runtime — não sobrescrever em deploy:
+  'utils/hierarchyMessageId.json',
+  'utils/leaderboardMessageId.json',
+  'events/ticketCounter.json',
+  'identificationMessages.json',
+  'sugerirVotes.json',
+]
 
 function requireToken() {
   if (TOKEN) return
@@ -81,14 +90,11 @@ async function buildZip() {
   })
   archive.pipe(output)
 
-  for (const entry of fs.readdirSync(projectDir)) {
-    if (EXCLUDE.has(entry)) continue
-    if (entry.endsWith('.sqlite')) continue
-    const full = path.join(projectDir, entry)
-    const stat = fs.statSync(full)
-    if (stat.isDirectory()) archive.directory(full, entry)
-    else archive.file(full, { name: entry })
-  }
+  archive.glob('**/*', {
+    cwd: projectDir,
+    dot: true,
+    ignore: EXCLUDE_GLOB,
+  })
 
   await archive.finalize()
   await done

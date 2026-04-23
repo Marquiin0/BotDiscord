@@ -5,83 +5,46 @@ const config = require('../config')
 
 const messageIdFilePath = path.join(__dirname, 'hierarchyMessageId.json')
 
-// Função para salvar múltiplos IDs de mensagens
-function saveMessageIds(messageIds) {
-  fs.writeFileSync(messageIdFilePath, JSON.stringify({ messageIds }))
+function saveMessageId(messageId) {
+  fs.writeFileSync(messageIdFilePath, JSON.stringify({ messageId }))
 }
 
-// Função para carregar múltiplos IDs de mensagens
-function loadMessageIds() {
-  if (fs.existsSync(messageIdFilePath)) {
-    const data = fs.readFileSync(messageIdFilePath)
-    const parsed = JSON.parse(data)
-    return parsed.messageIds || []
+function loadMessageId() {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(messageIdFilePath, 'utf8'))
+    return parsed.messageId || parsed.messageIds?.[0] || null
+  } catch {
+    return null
   }
-  return []
 }
 
-// Função para dividir mensagens longas em blocos menores de até 2000 caracteres
-function splitMessage(message, maxLen = 2000) {
-  const parts = []
-  let currentPart = ''
-
-  message.split('\n').forEach(line => {
-    if (currentPart.length + line.length > maxLen) {
-      parts.push(currentPart)
-      currentPart = ''
-    }
-    currentPart += line + '\n'
-  })
-
-  if (currentPart.length) {
-    parts.push(currentPart)
-  }
-
-  return parts
-}
-
-// Construir roleCategoryMap a partir de config.ranks
 const roleCategoryMap = {}
 for (const key of config.rankOrder) {
   const rank = config.ranks[key]
-  roleCategoryMap[rank.roleId] = { category: rank.name, fullName: rank.name }
+  roleCategoryMap[rank.roleId] = { category: rank.name }
 }
-
-// Prioridade de exibição a partir de config.rankOrder
 const rolePriority = config.rankOrder.map(key => config.ranks[key].name)
 
-// Função para construir a hierarquia da guilda
 async function buildHierarchyMessage(guild) {
   const localTime = DateTime.now()
     .setZone('America/Sao_Paulo')
     .toFormat('dd/MM/yyyy, HH:mm:ss')
   const hierarchy = {}
-
-  for (const role of rolePriority) {
-    hierarchy[role] = []
-  }
+  for (const role of rolePriority) hierarchy[role] = []
 
   let totalContingent = 0
-
   try {
     await guild.members.fetch()
   } catch (error) {
     console.error('Erro ao buscar membros da guilda:', error)
-    return ['Erro ao buscar membros da guilda.']
+    return null
   }
 
   guild.members.cache.forEach(member => {
     for (const roleId of Object.keys(roleCategoryMap)) {
       if (member.roles.cache.has(roleId)) {
         const { category } = roleCategoryMap[roleId]
-
-        if (!hierarchy[category]) {
-          console.error(
-            `Categoria não encontrada: ${category} para o cargo ID: ${roleId}`,
-          )
-          continue
-        }
-
+        if (!hierarchy[category]) continue
         hierarchy[category].push(`<@${member.user.id}>`)
         totalContingent++
         break
@@ -89,106 +52,43 @@ async function buildHierarchyMessage(guild) {
     }
   })
 
-  let hierarchyMessage = `# **${config.branding.hierarchyTitle}**\n\n`
-
-  rolePriority.forEach(role => {
-    const count = hierarchy[role].length || 0
-    hierarchyMessage += `# **${role}:** ${count ? `\`${count}\`` : '`0`'}\n`
-    hierarchyMessage +=
-      hierarchy[role].length > 0
-        ? hierarchy[role].join('\n') + '\n\n'
-        : 'Sem ocupantes.\n\n'
-  })
-
-  hierarchyMessage += `# **Total de contingente: \`${totalContingent}\`**\n`
-  hierarchyMessage += `\n\n*Atualizado em ${localTime}*`
-
-  return splitMessage(hierarchyMessage)
+  let msg = `# **${config.branding.hierarchyTitle}**\n\n`
+  for (const role of rolePriority) {
+    const members = hierarchy[role]
+    msg += `# **${role}:** \`${members.length}\`\n`
+    msg += members.length ? members.join('\n') + '\n\n' : 'Sem ocupantes.\n\n'
+  }
+  msg += `# **Total de contingente: \`${totalContingent}\`**\n\n*Atualizado em ${localTime}*`
+  return msg
 }
 
-// Função para atualizar a hierarquia no canal
 async function updateHierarchy(guild, channelId) {
   const channel = guild.channels.cache.get(channelId)
   if (!channel) {
-    console.log('Canal não encontrado.')
+    console.log('Canal de hierarquia não encontrado.')
     return
   }
 
+  const content = await buildHierarchyMessage(guild)
+  if (!content) return
+
   try {
-    const messageParts = await buildHierarchyMessage(guild)
-    let storedMessageIds = loadMessageIds()
-    let storedMessages = []
-
-    for (const messageId of storedMessageIds) {
+    const storedId = loadMessageId()
+    if (storedId) {
       try {
-        const message = await channel.messages.fetch(messageId)
-        storedMessages.push(message)
-      } catch (error) {
-        console.log(`Mensagem ${messageId} não encontrada. Será recriada.`)
+        const existing = await channel.messages.fetch(storedId)
+        if (existing.content !== content) await existing.edit(content)
+        return
+      } catch {
+        console.log('Mensagem de hierarquia anterior não encontrada. Recriando.')
       }
     }
 
-    const quantidadeMudou = storedMessages.length !== messageParts.length
-
-    if (quantidadeMudou) {
-      console.log(
-        'Quantidade de mensagens mudou. Deletando todas e recriando...',
-      )
-
-      for (const msg of storedMessages) {
-        try {
-          await msg.delete()
-        } catch (error) {
-          console.error(`Erro ao deletar mensagem ${msg.id}:`, error)
-        }
-      }
-
-      const newMessageIds = []
-      for (const part of messageParts) {
-        const newMessage = await channel.send(part)
-        newMessageIds.push(newMessage.id)
-      }
-
-      saveMessageIds(newMessageIds)
-      console.log('Hierarquia recriada com sucesso.')
-      return
-    }
-
-    if (storedMessages.length > messageParts.length) {
-      for (let i = messageParts.length; i < storedMessages.length; i++) {
-        try {
-          await storedMessages[i].delete()
-        } catch (error) {
-          console.error(
-            `Erro ao deletar mensagem ${storedMessages[i].id}:`,
-            error,
-          )
-        }
-      }
-      storedMessages = storedMessages.slice(0, messageParts.length)
-    }
-
-    let newMessageIds = []
-
-    for (let i = 0; i < messageParts.length; i++) {
-      if (storedMessages[i]) {
-        if (storedMessages[i].content !== messageParts[i]) {
-          await storedMessages[i].edit(messageParts[i])
-        }
-        newMessageIds.push(storedMessages[i].id)
-      } else {
-        const newMessage = await channel.send(messageParts[i])
-        newMessageIds.push(newMessage.id)
-      }
-    }
-
-    saveMessageIds(newMessageIds)
-    console.log('Hierarquia atualizada.')
+    const newMessage = await channel.send(content)
+    saveMessageId(newMessage.id)
   } catch (error) {
     console.error('Erro ao atualizar hierarquia:', error)
   }
 }
 
-module.exports = {
-  updateHierarchy,
-}
+module.exports = { updateHierarchy }
