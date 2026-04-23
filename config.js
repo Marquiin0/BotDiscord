@@ -43,7 +43,9 @@ module.exports = {
         prisao: '1477473908260208809',       // Log prisões (source)
         identificacao: '1477473908402946122', // Log identificação
         ticket: '1477473908260208812',       // Log tickets (transcript)
-        ponto: '1477473908260208804',        // Log ponto/horas
+        ponto: '1477473908260208804',        // Log ponto/horas (source toggle Genesis)
+        pontoMerryWeather: '1493298297073569902', // Log ponto/horas (source toggle MerryWeather)
+        horasPTR: '1477473908402946121',     // Log embed de horas PTR (entrada/saída)
         loja: '1477473908402946125',         // Log compras da loja
         rebaixamento: '1477473908402946129', // Log rebaixamentos
         promocao: '1477473908402946129',    // Log promoções

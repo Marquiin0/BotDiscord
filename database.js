@@ -144,6 +144,47 @@ const PatrolHours = sequelize.define('PatrolHours', {
 
 });
 
+const PatrolSession = sequelize.define('PatrolSession', {
+    inGameId: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
+    discordId: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    memberName: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
+    entryTime: {
+        type: DataTypes.DATE,
+        allowNull: false,
+    },
+    exitTime: {
+        type: DataTypes.DATE,
+        allowNull: true,
+    },
+    duration: {
+        type: DataTypes.FLOAT,
+        allowNull: true,
+    },
+    source: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: 'genesis',
+    },
+    weekStart: {
+        type: DataTypes.DATE,
+        allowNull: false,
+    },
+    nextCheckAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+        defaultValue: null,
+    },
+});
+
 const UserLog = sequelize.define('UserLog', {
     userId: {
         type: DataTypes.STRING,
@@ -753,6 +794,7 @@ module.exports = {
     Warning,
     MemberID,
     PatrolHours,
+    PatrolSession,
     WeaponLog,
     WeeklyPoints,
     Ausencia,
