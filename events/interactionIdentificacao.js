@@ -33,7 +33,9 @@ const fetch = (...args) =>
 const { Identificacao } = require('../database.js')
 
 // Diretório e URL de anexos
-const ATTACHMENTS_DIR = '/var/www/transcripts/attachments/identificacoes'
+const TRANSCRIPTS_DIR =
+  process.env.TRANSCRIPTS_DIR || path.join(__dirname, '..', 'transcripts')
+const ATTACHMENTS_DIR = path.join(TRANSCRIPTS_DIR, 'attachments', 'identificacoes')
 const STATIC_BASE_URL =
   process.env.STATIC_BASE_URL ||
   'https://www.bpolpolice.com.br/transcripts/attachments/identificacoes'
