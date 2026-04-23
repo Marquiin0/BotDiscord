@@ -9,5 +9,7 @@
     { "id_tipo": "hora_ptr", "nome_tipo": "Hora de PTR", "pontos_base": 10 },
     { "id_tipo": "fechar_ticket", "nome_tipo": "Ticket Finalizado", "pontos_base": 50 },
     { "id_tipo": "receber_adv", "nome_tipo": "Receber ADV", "pontos_base": -30 },
-    { "id_tipo": "participante_prisao", "nome_tipo": "Participante Prisão", "pontos_base": 5 }
+    { "id_tipo": "participante_prisao", "nome_tipo": "Participante Prisão", "pontos_base": 5 },
+    { "id_tipo": "rec_recrutador", "nome_tipo": "Recrutamento (Recrutador)", "pontos_base": 25 },
+    { "id_tipo": "rec_auxiliar", "nome_tipo": "Recrutamento (Auxiliar)", "pontos_base": 10 }
 ]

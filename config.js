@@ -51,6 +51,7 @@ module.exports = {
         promocao: '1477473908402946129',    // Log promoções
         corregedoria: '1477473908587233434', // Log advertências/exonerações
         setUnidades: '1477473908826443830',  // Log de set de unidades (batalhões)
+        rec: '1477473907912212503',          // Canal de registro de REC (FTO)
     },
 
     // ==================== CATEGORIAS ====================
@@ -145,6 +146,7 @@ module.exports = {
 
     // ==================== PERMISSÕES (quem pode usar corregedoria etc) ====================
     permissions: {
+        rec: ['1477473906863505589', '1496261811371249825'], // Cargos autorizados /registrar-rec (FTO)
         corregedoria: [
             '1477408727270166606',  // I.C
             '1477408727295463435',  // H.C
