@@ -7,7 +7,9 @@ const {
   PermissionsBitField,
   MessageFlags,
 } = require('discord.js')
+const path = require('path')
 const config = require('../config')
+const { attachImage } = require('../utils/attachImage')
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -45,9 +47,11 @@ module.exports = {
         `• Tempo limite: 30 minutos\n` +
         `• Ao ser aprovado, você receberá o cargo de Curso MAA`,
       )
-      .setImage(config.branding.bannerUrl)
       .setFooter({ text: config.branding.footerText })
       .setTimestamp()
+
+    const banner = attachImage(path.join(__dirname, '..', config.branding.bannerPath))
+    embed.setImage(banner.url)
 
     const buttons = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
@@ -60,7 +64,7 @@ module.exports = {
         .setStyle(ButtonStyle.Primary),
     )
 
-    await channel.send({ embeds: [embed], components: [buttons] })
+    await channel.send({ embeds: [embed], components: [buttons], files: [banner.attachment] })
 
     await interaction.reply({
       content: `✅ Embed do Curso MAA criado no canal <#${config.cursoMAA.channelId}>!`,

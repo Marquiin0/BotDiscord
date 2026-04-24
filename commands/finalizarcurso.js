@@ -33,7 +33,7 @@ module.exports = {
     // Permite o comando para administradores ou para usuários que possuam permissão
     if (
       !interaction.member.permissions.has(PermissionsBitField.Flags.Administrator) &&
-      !interaction.memberPermissions.has(PermissionsBitField.Flags.UseApplicationCommands)
+      !interaction.member.roles.cache.hasAny(...config.permissions.hcPlus)
     ) {
       return interaction.reply({
         content: '❌ Você não tem permissão.',
@@ -181,14 +181,19 @@ module.exports = {
       content: 'Curso finalizado com sucesso!'
     });
 
-    // Envia os embeds nos canais correspondentes
-    const courseChannel = guild.channels.cache.get(config.channels.cursoMAA);
-    if (courseChannel) {
-      await courseChannel.send({ embeds: [courseEmbed] });
+    // Envia o embed no canal de aprovados de curso (guild principal)
+    const approvedChannel = guild.channels.cache.get(config.channels.cursoAprovados);
+    if (approvedChannel) {
+      await approvedChannel.send({ embeds: [courseEmbed] });
     }
-    const logChannel = guild.channels.cache.get(config.channels.exoneracaoLog);
-    if (logChannel) {
-      await logChannel.send({ embeds: [logEmbed] });
+
+    // Envia o log na guild de logs
+    const logsGuild = interaction.client.guilds.cache.get(config.guilds.logs);
+    if (logsGuild) {
+      const logChannel = logsGuild.channels.cache.get('1477473908587233435');
+      if (logChannel) {
+        await logChannel.send({ embeds: [logEmbed] });
+      }
     }
   },
 };

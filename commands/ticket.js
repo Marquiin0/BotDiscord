@@ -8,7 +8,9 @@ const {
 } = require('discord.js')
 const { PermissionsBitField } = require('discord.js')
 const { MessageFlags } = require('discord.js')
+const path = require('path')
 const config = require('../config')
+const { attachImage } = require('../utils/attachImage')
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -20,9 +22,7 @@ module.exports = {
       !interaction.member.permissions.has(
         PermissionsBitField.Flags.Administrator,
       ) &&
-      !interaction.memberPermissions.has(
-        PermissionsBitField.Flags.UseApplicationCommands,
-      )
+      !interaction.member.roles.cache.hasAny(...config.permissions.hcPlus)
     ) {
       return interaction.reply({
         content: '❌ Você não tem permissão.',
@@ -59,8 +59,11 @@ module.exports = {
           name: '👑 Donater',
           value: 'Use este ticket para doações ou compras de ✨ Donater',
         },
+        {
+          name: '🎲 Item Misterioso',
+          value: 'Ticket aberto automaticamente ao comprar o Item Misterioso na loja.',
+        },
       )
-      .setImage(config.branding.bannerUrl)
       .setColor('#FFFFFF')
       .setFooter({
         text: 'Escolha o ticket que melhor se encaixa na sua necessidade.',
@@ -95,8 +98,18 @@ module.exports = {
         .setStyle(ButtonStyle.Secondary),
     )
 
+    const row2 = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId('ticket_item_misterioso')
+        .setLabel('🎲 Item Misterioso')
+        .setStyle(ButtonStyle.Secondary),
+    )
+
+    const banner = attachImage(path.join(__dirname, '..', config.branding.bannerPath))
+    embed.setImage(banner.url)
+
     // Envia o painel público (embed + botões)
-    await interaction.channel.send({ embeds: [embed], components: [row] })
+    await interaction.channel.send({ embeds: [embed], components: [row, row2], files: [banner.attachment] })
 
     // Responde ao slash command de forma ephemeral
     await interaction.reply({

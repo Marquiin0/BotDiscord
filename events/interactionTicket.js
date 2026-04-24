@@ -9,6 +9,7 @@ const {
   TextInputBuilder,
   TextInputStyle,
   MessageFlags,
+  AttachmentBuilder,
 } = require('discord.js')
 const fs = require('fs')
 const path = require('path')
@@ -45,7 +46,8 @@ function downloadAttachment(url, dest) {
 // Todas as categorias de ticket usam a mesma categoria
 const ticketCategoryId = config.categories.tickets
 
-const staffRoles = config.permissions.corregedoria
+// Quem pode usar botões de ticket (assumir, finalizar, adicionar, remover, poke)
+const staffRoles = config.permissions.rhPlus
 
 const typeMap = {
   corregedoria: 'crg',
@@ -53,6 +55,7 @@ const typeMap = {
   recrutamento: 'rec',
   duvidas: 'duv',
   donater: 'dnt',
+  item_misterioso: 'mst',
 }
 
 const iconMap = {
@@ -61,6 +64,7 @@ const iconMap = {
   rec: '🎫',
   duv: '📁',
   dnt: '✨',
+  mst: '🎲',
 }
 
 function canUseTicketButtons(member) {
@@ -103,16 +107,18 @@ function getCategoryIdForTipo() {
 }
 
 function getExtraRolesForTipo(sigla) {
-  // Corregedoria: I.C + H.C + SCMD + CMD
-  if (sigla === 'crg') return config.permissions.corregedoria
-  // Alto Comando: SCMD + CMD
-  if (sigla === 'alt') return [config.ranks.SCMD.roleId, config.ranks.CMD.roleId]
-  // Recrutamento: staff geral
-  if (sigla === 'rec') return [config.permissions.staff]
-  // Dúvidas: staff geral
-  if (sigla === 'duv') return [config.permissions.staff]
-  // Donater: staff geral
-  if (sigla === 'dnt') return [config.permissions.staff]
+  // Dúvidas: RH+ (R.H, I.A, S.C, H.C, SCMD, CMD)
+  if (sigla === 'duv') return config.permissions.rhPlus
+  // Corregedoria: I.A+ (I.A, S.C, H.C, SCMD, CMD)
+  if (sigla === 'crg') return config.permissions.iaPlus
+  // Alto Comando: HC+ (H.C, SCMD, CMD)
+  if (sigla === 'alt') return config.permissions.hcPlus
+  // Recrutamento: FTO/RECS + RH+
+  if (sigla === 'rec') return [...config.permissions.ftoRecs, ...config.permissions.rhPlus]
+  // Donater: SCMD + CMD apenas
+  if (sigla === 'dnt') return [config.ranks.SCMD.roleId, config.ranks.CMD.roleId]
+  // Item Misterioso: SCMD + CMD apenas
+  if (sigla === 'mst') return [config.ranks.SCMD.roleId, config.ranks.CMD.roleId]
   return []
 }
 
@@ -126,6 +132,7 @@ function getTicketTypeFromName(channelName) {
   if (sigla === 'rec') return 'Recrutamento'
   if (sigla === 'duv') return 'Dúvidas'
   if (sigla === 'dnt') return 'Donater'
+  if (sigla === 'mst') return 'Item Misterioso'
   return 'Desconhecido'
 }
 
@@ -168,8 +175,7 @@ module.exports = {
   name: Events.InteractionCreate,
   async execute(interaction) {
     if (interaction.deferred || interaction.replied) return
-    const transcriptsPath =
-      process.env.TRANSCRIPTS_DIR || path.join(__dirname, '..', 'transcripts')
+    const transcriptsPath = path.join(__dirname, '..', 'transcripts')
     if (!fs.existsSync(transcriptsPath)) {
       fs.mkdirSync(transcriptsPath, { recursive: true })
     }
@@ -179,6 +185,7 @@ module.exports = {
       'ticket_recrutamento',
       'ticket_duvidas',
       'ticket_donater',
+      'ticket_item_misterioso',
     ]
     if (
       interaction.isButton() &&
@@ -307,6 +314,32 @@ module.exports = {
         components: [row],
       })
       await ticketChannel.setTopic(`${userId}|${ticketMsg.id}`)
+      // Log de ticket aberto na guild de logs
+      try {
+        const logGuild = interaction.client.guilds.cache.get(config.guilds.logs) ||
+          await interaction.client.guilds.fetch(config.guilds.logs).catch(() => null)
+        if (logGuild) {
+          const logChannel = logGuild.channels.cache.get(config.logsChannels.ticket) ||
+            await logGuild.channels.fetch(config.logsChannels.ticket).catch(() => null)
+          if (logChannel && logChannel.isTextBased()) {
+            const embedOpenLog = new EmbedBuilder()
+              .setColor(0x0099ff)
+              .setTitle('🎟 Ticket Aberto')
+              .addFields(
+                { name: '👤 Usuário', value: `<@${userId}>`, inline: true },
+                { name: '📁 Tipo', value: sigla.toUpperCase(), inline: true },
+                { name: '📝 Motivo', value: `\`\`\`\n${reason}\n\`\`\``, inline: false },
+                { name: '📌 Canal', value: `<#${ticketChannel.id}>`, inline: true },
+              )
+              .setFooter({ text: config.branding.footerText })
+              .setTimestamp()
+            await logChannel.send({ embeds: [embedOpenLog] })
+          }
+        }
+      } catch (err) {
+        console.error('Erro ao enviar log de ticket aberto:', err)
+      }
+
       return interaction.editReply({
         content: `✅ Ticket criado com sucesso!\nCanal: ${ticketChannel}\nID: \`${shortTicketName}\``,
         flags: MessageFlags.Ephemeral,
@@ -582,19 +615,18 @@ module.exports = {
         const targetGuildId = config.guilds.logs
         const transcriptsChannelId = config.logsChannels.ticket
 
+        transcriptHTML += `</body></html>`
+
         const uniqueId = `${channel.id}-${Date.now()}-${Math.floor(Math.random() * 1e9)}`
-        const transcriptFileName = `${uniqueId}.html`
-        const transcriptFilePath = path.join(
-          transcriptsPath,
-          transcriptFileName,
-        )
+        const transcriptFileName = `transcript-${channel.name.split('・')[1] || 'ticket'}.html`
 
+        // Salvar arquivo localmente também
+        const transcriptFilePath = path.join(transcriptsPath, `${uniqueId}.html`)
         fs.writeFileSync(transcriptFilePath, transcriptHTML)
-
-        const transcriptUrl = `https://www.bpolpolice.com.br/transcripts/${transcriptFileName}`
 
         const transcriptEmbed = new EmbedBuilder()
           .setTitle('📜 Transcript do Ticket')
+          .setDescription('O transcript está anexado como arquivo abaixo. Baixe e abra no navegador para visualizar.')
           .addFields(
             { name: 'Nome do Ticket', value: channel.name, inline: true },
             { name: 'Motivo', value: motivo, inline: true },
@@ -610,17 +642,15 @@ module.exports = {
             },
           )
           .setColor(0x0099ff)
-          .setFooter({ text: 'Ticket Finalizado' })
+          .setFooter({ text: config.branding.footerText })
           .setTimestamp()
 
-        const transcriptButton = new ButtonBuilder()
-          .setLabel('Acessar Transcript')
-          .setStyle(ButtonStyle.Link)
-          .setURL(transcriptUrl)
-
-        const rowTranscript = new ActionRowBuilder().addComponents(
-          transcriptButton,
-        )
+        // Criar attachment direto do buffer para evitar problemas de path
+        const transcriptBuffer = Buffer.from(transcriptHTML, 'utf-8')
+        const transcriptAttachment = new AttachmentBuilder(transcriptBuffer, {
+          name: transcriptFileName,
+          description: `Transcript do ticket ${channel.name}`,
+        })
 
         // busca a guild e o canal corretos, mesmo que o ticket esteja em outra guild
         const targetGuild = interaction.client.guilds.cache.get(targetGuildId)
@@ -630,7 +660,7 @@ module.exports = {
         if (transcriptsChannel) {
           await transcriptsChannel.send({
             embeds: [transcriptEmbed],
-            components: [rowTranscript],
+            files: [transcriptAttachment],
           })
         }
         const ticketId = channel.name.split('・')[1].toLowerCase()
@@ -689,9 +719,9 @@ module.exports = {
         }
         await interaction.editReply({
           content:
-            '✅ Ticket finalizado com sucesso. O canal será fechado em 5 segundos...',
+            '✅ Ticket finalizado com sucesso. O canal será fechado em 2 segundos...',
         })
-        setTimeout(() => channel.delete().catch(() => {}), 5000)
+        setTimeout(() => channel.delete().catch(() => {}), 2000)
       }
       return
     }
@@ -835,6 +865,31 @@ module.exports = {
           { where: { ticketIdentifier: ticketId } },
         )
         console.log('[Assumir] Rows assumidos:', rowsAssumed)
+
+        // Log de ticket assumido na guild de logs
+        try {
+          const logGuild = interaction.client.guilds.cache.get(config.guilds.logs) ||
+            await interaction.client.guilds.fetch(config.guilds.logs).catch(() => null)
+          if (logGuild) {
+            const logChannel = logGuild.channels.cache.get(config.logsChannels.ticket) ||
+              await logGuild.channels.fetch(config.logsChannels.ticket).catch(() => null)
+            if (logChannel && logChannel.isTextBased()) {
+              const embedAssumeLog = new EmbedBuilder()
+                .setColor(0xf1c40f)
+                .setTitle('👮 Ticket Assumido')
+                .addFields(
+                  { name: '🎟 Ticket', value: channel.name, inline: true },
+                  { name: '👮 Assumido por', value: `<@${interaction.user.id}>`, inline: true },
+                )
+                .setFooter({ text: config.branding.footerText })
+                .setTimestamp()
+              await logChannel.send({ embeds: [embedAssumeLog] })
+            }
+          }
+        } catch (err) {
+          console.error('Erro ao enviar log de ticket assumido:', err)
+        }
+
         return interaction.editReply({
           content: '✅ Você assumiu este ticket!',
           flags: MessageFlags.Ephemeral,

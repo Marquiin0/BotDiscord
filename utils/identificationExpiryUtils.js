@@ -38,6 +38,7 @@ const GUILD_ID = config.guilds.main
 const TICKET_CHANNEL_URL =
   `https://discord.com/channels/${config.guilds.main}/${config.channels.tickets}`
 const STAFF_LOG_CHANNEL_ID = config.channels.identificacaoLog
+const RESUMO_CHANNEL_ID = config.channels.identificacaoResumo
 const COPY_BTN_PREFIX = 'copy_mentions_'
 
 // arquivo que guarda os IDs das mensagens
@@ -56,10 +57,10 @@ function saveStore(obj) {
   fs.writeFileSync(STORE_PATH, JSON.stringify(obj, null, 2))
 }
 
-// helper SQLite (<= dataRegistro)
+// helper PostgreSQL (<= dataRegistro)
 const lteDataRegistro = dateObj =>
   SequelizeLib.literal(
-    `strftime('%s', dataRegistro) <= strftime('%s', '${dateObj.toISOString()}')`,
+    `"dataRegistro" <= '${dateObj.toISOString()}'`,
   )
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -78,10 +79,20 @@ async function notifyExpiredIdentifications(client) {
     return
   }
 
+  // Agrupar registros por userId para enviar apenas 1 DM por usuário
+  const porUsuario = new Map()
   for (const reg of registros) {
+    if (!porUsuario.has(reg.userId)) porUsuario.set(reg.userId, [])
+    porUsuario.get(reg.userId).push(reg)
+  }
+
+  for (const [userId, regs] of porUsuario) {
     let dmOk = false
+    // Usar a data do registro mais recente
+    const maisRecente = regs.reduce((a, b) => (a.dataRegistro > b.dataRegistro ? a : b))
+
     try {
-      const user = await client.users.fetch(reg.userId).catch(() => null)
+      const user = await client.users.fetch(userId).catch(() => null)
       if (!user) throw new Error('User não encontrado')
 
       const embed = new EmbedBuilder()
@@ -93,7 +104,7 @@ async function notifyExpiredIdentifications(client) {
         )
         .addFields({
           name: '📅 Criada em',
-          value: `<t:${Math.floor(reg.dataRegistro / 1000)}:F>`,
+          value: `<t:${Math.floor(maisRecente.dataRegistro / 1000)}:F>`,
         })
         .setFooter({
           text: `${config.branding.footerText} • CORREGEDORIA`,
@@ -113,34 +124,36 @@ async function notifyExpiredIdentifications(client) {
       dmOk = true
     } catch (err) {
       console.warn(
-        `[ID‑EXP] DM falhou para ${reg.userId} (${reg.id}):`,
+        `[ID‑EXP] DM falhou para ${userId}:`,
         err.code ?? err.message,
       )
     }
 
-    // marca como inativo em qualquer cenário
-    try {
-      reg.status = 'inativo'
-      await reg.save()
-      console.log(
-        `[ID‑EXP] Registro ${reg.id} marcado inativo (${dmOk ? 'DM OK' : 'DM falhou'})`,
-      )
-    } catch (err) {
-      console.error(`[ID‑EXP] Falha ao salvar registro ${reg.id}:`, err)
+    // Marca TODOS os registros do usuário como inativo
+    for (const reg of regs) {
+      try {
+        reg.status = 'inativo'
+        await reg.save()
+        console.log(
+          `[ID‑EXP] Registro ${reg.id} marcado inativo (${dmOk ? 'DM OK' : 'DM falhou'})`,
+        )
+      } catch (err) {
+        console.error(`[ID‑EXP] Falha ao salvar registro ${reg.id}:`, err)
+      }
     }
 
-    // Trocar cargo: remover identificado, adicionar não identificado
+    // Trocar cargo: remover identificado, adicionar não identificado (1x por usuário)
     try {
       const guild = client.guilds.cache.get(GUILD_ID)
       if (guild) {
-        const member = await guild.members.fetch(reg.userId).catch(() => null)
+        const member = await guild.members.fetch(userId).catch(() => null)
         if (member) {
           await member.roles.remove(config.roles.identificado).catch(console.error)
           await member.roles.add(config.roles.naoIdentificado).catch(console.error)
         }
       }
     } catch (err) {
-      console.error(`[ID‑EXP] Erro ao trocar cargo de ${reg.userId}:`, err)
+      console.error(`[ID‑EXP] Erro ao trocar cargo de ${userId}:`, err)
     }
   }
 }
@@ -201,71 +214,97 @@ async function alertStaffExpiredIdentifications(client) {
 // 3) RELATÓRIO GERAL
 // ────────────────────────────────────────────────────────────────────────────
 async function reportIdentificationStatus(client) {
-  if (!MemberModel) return
-
-  const guild = client.guilds.cache.get(GUILD_ID)
-  const channel = guild?.channels.cache.get(STAFF_LOG_CHANNEL_ID)
-  if (!guild || !channel) return
-
-  /* ---------- coleta dados (igual antes) -------------------------------- */
-  let membersDb, identificados
-  try {
-    membersDb = await MemberModel.findAll({ attributes: ['memberId'] })
-    identificados = await Identificacao.findAll({
-      attributes: ['userId'],
-      group: ['userId'],
-    })
-  } catch (err) {
-    console.error('[ID‑EXP] Erro ao coletar dados:', err)
+  const guild = client.guilds.cache.get(GUILD_ID) || await client.guilds.fetch(GUILD_ID).catch(() => null)
+  if (!guild) {
+    console.error('[ID‑EXP] Guild não encontrada:', GUILD_ID)
     return
   }
 
-  const todosIDs = membersDb.map(m => m.memberId)
-  const idsIdentificados = identificados.map(i => i.userId)
-  const semIdentificacao = todosIDs.filter(id => !idsIdentificados.includes(id))
-
-  const limite10 = moment()
-    .tz('America/Sao_Paulo')
-    .subtract(10, 'days')
-    .toDate()
-  let exp10
-  try {
-    exp10 = await Identificacao.findAll({
-      where: { status: 'inativo', [Op.and]: lteDataRegistro(limite10) },
-    })
-  } catch (err) {
-    console.error('[ID‑EXP] Erro ao buscar expirados 10+ dias:', err)
+  const channel = guild.channels.cache.get(RESUMO_CHANNEL_ID) || await guild.channels.fetch(RESUMO_CHANNEL_ID).catch(() => null)
+  if (!channel) {
+    console.error('[ID‑EXP] Canal de resumo não encontrado:', RESUMO_CHANNEL_ID)
     return
   }
 
-  /* ---------- monta embeds + rows --------------------------------------- */
+  // IDs isentos (CMD e SCMD não precisam de identificação)
+  const exemptRoles = [config.ranks.CMD.roleId, config.ranks.SCMD.roleId]
+
+  /* ---------- Método 1: banco de dados ---------------------------------- */
+  const semIdentificacaoDB = new Set()
+  if (MemberModel) {
+    try {
+      const membersDb = await MemberModel.findAll({ attributes: ['memberId'] })
+      const identificados = await Identificacao.findAll({
+        where: { status: 'ativo' },
+        attributes: ['userId'],
+        group: ['userId'],
+      })
+      const idsIdentificados = new Set(identificados.map(i => i.userId))
+      for (const m of membersDb) {
+        if (!idsIdentificados.has(m.memberId)) {
+          semIdentificacaoDB.add(m.memberId)
+        }
+      }
+    } catch (err) {
+      console.error('[ID‑EXP] Erro ao coletar dados do banco:', err)
+    }
+  }
+
+  /* ---------- Método 2: verificação por roles --------------------------- */
+  const semIdentificacaoRoles = new Set()
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      await guild.members.fetch()
+      break
+    } catch (error) {
+      const retryAfter = error.data?.retry_after || 30
+      if (attempt < 2) {
+        console.log(`[ID‑EXP] Rate limited ao buscar membros. Tentando em ${Math.ceil(retryAfter)}s... (${attempt + 1}/3)`)
+        await new Promise(resolve => setTimeout(resolve, retryAfter * 1000))
+      } else {
+        console.error('[ID‑EXP] Erro ao buscar membros após 3 tentativas:', error.message)
+      }
+    }
+  }
+
+  guild.members.cache.forEach(member => {
+    if (member.user.bot) return
+    // Verifica se tem alguma patente da corporação
+    const temPatente = config.rankOrder.some(key => member.roles.cache.has(config.ranks[key].roleId))
+    if (!temPatente) return
+    // Pula se é CMD ou SCMD (isentos)
+    if (exemptRoles.some(r => member.roles.cache.has(r))) return
+    // Se não tem cargo identificado OU tem cargo sem identificação
+    const temIdentificado = member.roles.cache.has(config.roles.identificado)
+    const temNaoIdentificado = member.roles.cache.has(config.roles.naoIdentificado)
+    if (!temIdentificado || temNaoIdentificado) {
+      semIdentificacaoRoles.add(member.id)
+    }
+  })
+
+  /* ---------- União dos dois métodos (sem duplicatas) -------------------- */
+  const semIdentificacaoSet = new Set([...semIdentificacaoDB, ...semIdentificacaoRoles])
+
+  // Remover isentos (CMD e SCMD)
+  for (const id of semIdentificacaoSet) {
+    const member = guild.members.cache.get(id)
+    if (member && exemptRoles.some(r => member.roles.cache.has(r))) {
+      semIdentificacaoSet.delete(id)
+    }
+  }
+
+  const semIdentificacao = [...semIdentificacaoSet]
+
+  /* ---------- monta embed + row ----------------------------------------- */
   const semDesc = semIdentificacao.length
     ? semIdentificacao.map(id => `<@${id}>`).join('\n')
     : 'Todos os oficiais possuem identificação.'
-
-  const expDesc = exp10.length
-    ? exp10
-        .map(
-          r =>
-            `<@${r.userId}> • criada <t:${Math.floor(
-              r.dataRegistro / 1000,
-            )}:R>`,
-        )
-        .join('\n')
-    : 'Nenhuma identificação expirada há 10+ dias.'
 
   const embedSem = new EmbedBuilder()
     .setColor(0xffa500)
     .setTitle('📋 Oficiais sem Identificação')
     .setDescription(semDesc)
     .setFooter({ text: `Total: ${semIdentificacao.length}` })
-    .setTimestamp()
-
-  const embedExp = new EmbedBuilder()
-    .setColor(0xff0000)
-    .setTitle('⏰ Identificações expiradas (10+ dias)')
-    .setDescription(expDesc)
-    .setFooter({ text: `Total: ${exp10.length}` })
     .setTimestamp()
 
   const rowSem = new ActionRowBuilder().addComponents(
@@ -275,41 +314,85 @@ async function reportIdentificationStatus(client) {
       .setStyle(ButtonStyle.Secondary)
       .setEmoji('📋'),
   )
-  const rowExp = new ActionRowBuilder().addComponents(
+
+  /* ---------- envia com menções de IA e RH ------------------------------ */
+  const mentionContent = `<@&${config.ranks.IA.roleId}> <@&${config.roles.rh}>`
+  await channel.send({ content: mentionContent, embeds: [embedSem], components: [rowSem] })
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// 4) Relatório de oficiais sem curso MAA
+// ────────────────────────────────────────────────────────────────────────────
+async function reportMAAStatus(client) {
+  const guild = client.guilds.cache.get(GUILD_ID) || await client.guilds.fetch(GUILD_ID).catch(() => null)
+  if (!guild) {
+    console.error('[MAA] Guild não encontrada:', GUILD_ID)
+    return
+  }
+
+  const channel = guild.channels.cache.get(RESUMO_CHANNEL_ID) || await guild.channels.fetch(RESUMO_CHANNEL_ID).catch(() => null)
+  if (!channel) {
+    console.error('[MAA] Canal de resumo não encontrado:', RESUMO_CHANNEL_ID)
+    return
+  }
+
+  // Fetch membros com retry
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      await guild.members.fetch()
+      break
+    } catch (error) {
+      const retryAfter = error.data?.retry_after || 30
+      if (attempt < 2) {
+        console.log(`[MAA] Rate limited ao buscar membros. Tentando em ${Math.ceil(retryAfter)}s... (${attempt + 1}/3)`)
+        await new Promise(resolve => setTimeout(resolve, retryAfter * 1000))
+      } else {
+        console.error('[MAA] Erro ao buscar membros após 3 tentativas:', error.message)
+        return
+      }
+    }
+  }
+
+  // Isentos: CMD e SCMD não precisam de MAA
+  const exemptRoles = [config.ranks.CMD.roleId, config.ranks.SCMD.roleId]
+  const semMAA = []
+
+  guild.members.cache.forEach(member => {
+    if (member.user.bot) return
+    // Verifica se tem alguma patente da corporação
+    const temPatente = config.rankOrder.some(key => member.roles.cache.has(config.ranks[key].roleId))
+    if (!temPatente) return
+    // Pula se já tem MAA aprovado
+    if (member.roles.cache.has(config.cursoMAA.roleAprovado)) return
+    // Pula se é CMD ou SCMD
+    if (exemptRoles.some(r => member.roles.cache.has(r))) return
+    semMAA.push(member.id)
+  })
+
+  // Só envia se houver oficiais sem curso MAA
+  if (semMAA.length === 0) return
+
+  const embedMAA = new EmbedBuilder()
+    .setColor(config.branding.color)
+    .setTitle('📋 Oficiais sem Curso MAA')
+    .setDescription(semMAA.map(id => `<@${id}>`).join('\n'))
+    .setFooter({ text: `Total: ${semMAA.length}` })
+    .setTimestamp()
+
+  const rowMAA = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
-      .setCustomId(`${COPY_BTN_PREFIX}exp`)
+      .setCustomId(`${COPY_BTN_PREFIX}maa`)
       .setLabel('Copiar menções')
       .setStyle(ButtonStyle.Secondary)
       .setEmoji('📋'),
   )
 
-  /* ---------- cria OU edita mensagens ----------------------------------- */
-  const store = loadStore()
-
-  // helper interno para criar / editar
-  async function upsertMessage(key, embed, row) {
-    const msgId = store[key]
-    let message
-    if (msgId) {
-      // tenta editar
-      message = await channel.messages.fetch(msgId).catch(() => null)
-      if (message) {
-        await message.edit({ embeds: [embed], components: [row] })
-        return
-      }
-    }
-    // se não existia (ou foi deletada) → envia de novo
-    message = await channel.send({ embeds: [embed], components: [row] })
-    store[key] = message.id
-    saveStore(store)
-  }
-
-  await upsertMessage('sem', embedSem, rowSem)
-  await upsertMessage('exp', embedExp, rowExp)
+  const mentionContent = `<@&${config.ranks.IA.roleId}> <@&${config.roles.rh}>`
+  await channel.send({ content: mentionContent, embeds: [embedMAA], components: [rowMAA] })
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// 4) Handler do botão "Copiar menções"
+// 5) Handler do botão "Copiar menções"
 // ────────────────────────────────────────────────────────────────────────────
 async function handleCopyMentions(interaction) {
   if (
@@ -344,5 +427,6 @@ module.exports = {
   notifyExpiredIdentifications,
   alertStaffExpiredIdentifications,
   reportIdentificationStatus,
+  reportMAAStatus,
   handleCopyMentions,
 }

@@ -1,18 +1,25 @@
 const {
   EmbedBuilder,
+  AttachmentBuilder,
   MessageFlags,
 } = require('discord.js')
+const fs = require('fs')
+const path = require('path')
 const {
   ActionReports,
   PrisonReports,
   ApreensaoReports,
   PromotionRecords,
   PatrolHours,
+  PatrolSession,
   Identificacao,
   QuizResult,
   MemberID,
+  Warning,
 } = require('../database')
 const config = require('../config')
+const moment = require('moment-timezone')
+const { Sequelize, Op } = require('sequelize')
 
 module.exports = {
   name: 'interactionCreate',
@@ -65,7 +72,17 @@ async function showUserInfo(interaction, targetUserId, ephemeral = true) {
       PrisonReports.count({ where: { commanderId: targetUserId } }),
       ApreensaoReports.count({ where: { commanderId: targetUserId } }),
       PromotionRecords.findOne({ where: { userId: targetUserId } }),
-      PatrolHours.findOne({ where: { userId: targetUserId } }),
+      PatrolSession.findOne({
+        attributes: [
+          [Sequelize.fn('COALESCE', Sequelize.fn('SUM', Sequelize.col('duration')), 0), 'totalHours']
+        ],
+        where: {
+          discordId: targetUserId,
+          weekStart: moment().tz('America/Sao_Paulo').startOf('week').toDate(),
+          exitTime: { [Op.ne]: null },
+        },
+        raw: true,
+      }),
       Identificacao.findOne({
         where: { userId: targetUserId, status: 'ativo' },
         order: [['dataRegistro', 'DESC']],
@@ -74,16 +91,61 @@ async function showUserInfo(interaction, targetUserId, ephemeral = true) {
         where: { userId: targetUserId, passed: true },
         order: [['attemptDate', 'DESC']],
       }),
-      MemberID.findOne({ where: { discordId: targetUserId } }),
+      MemberID.findOne({ where: { memberId: targetUserId } }),
     ])
 
     // Contagem de participações em ações
-    const { Op } = require('sequelize')
     const actionParticipations = await ActionReports.count({
       where: {
         participants: { [Op.like]: `%${targetUserId}%` },
       },
     })
+
+    // Contagem de participações em apreensões
+    const apreensaoParticipations = await ApreensaoReports.count({
+      where: {
+        participants: { [Op.like]: `%${targetUserId}%` },
+      },
+    })
+
+    // Contagem de participações em prisões
+    const prisonParticipations = await PrisonReports.count({
+      where: {
+        participants: { [Op.like]: `%${targetUserId}%` },
+      },
+    })
+
+    // Horas acumuladas desde última promoção
+    const lastPromotionDate = promotionRecord && promotionRecord.lastPromotionDate
+      ? new Date(promotionRecord.lastPromotionDate)
+      : member.joinedAt || new Date(0)
+
+    const accumulatedData = await PatrolSession.findOne({
+      attributes: [
+        [Sequelize.fn('COALESCE', Sequelize.fn('SUM', Sequelize.col('duration')), 0), 'totalHours']
+      ],
+      where: {
+        discordId: targetUserId,
+        exitTime: { [Op.ne]: null },
+        entryTime: { [Op.gte]: lastPromotionDate },
+      },
+      raw: true,
+    })
+    const accumulatedHours = accumulatedData ? parseFloat(accumulatedData.totalHours) : 0
+
+    // Contagem de cursos de ação completados
+    const actionCourseCount = config.actionCourseRoles.filter(roleId =>
+      member.roles.cache.has(roleId)
+    ).length
+
+    // Advertências ativas
+    const warningCount = await Warning.count({ where: { userId: targetUserId } })
+
+    // Redução de dias da loja
+    let dayReduction = 0
+    for (const [roleId, days] of Object.entries(config.promotionDayReductions)) {
+      if (member.roles.cache.has(roleId)) dayReduction += days
+    }
 
     // Verifica se tem curso MAA
     const hasCursoMAA = member.roles.cache.has(config.cursoMAA.roleAprovado)
@@ -103,15 +165,17 @@ async function showUserInfo(interaction, targetUserId, ephemeral = true) {
       ? new Date(promotionRecord.lastPromotionDate).toLocaleDateString('pt-BR')
       : 'Sem registro'
 
-    // Horas totais
-    const totalHours = patrolData ? patrolData.hours.toFixed(1) : '0.0'
+    // Horas semanais (PatrolSession) — só conta sessões fechadas (entrada + saída de toggle)
+    const totalHours = patrolData ? parseFloat(patrolData.totalHours).toFixed(1) : '0.0'
 
     // Identifica patente atual
     let currentRank = 'Sem patente'
+    let currentRankKey = null
     for (const key of config.rankOrder) {
       const rank = config.ranks[key]
       if (member.roles.cache.has(rank.roleId)) {
         currentRank = `${rank.tag} ${rank.name}`
+        currentRankKey = key
         break
       }
     }
@@ -125,10 +189,10 @@ async function showUserInfo(interaction, targetUserId, ephemeral = true) {
       .addFields(
         { name: '👤 Nome', value: member.displayName, inline: true },
         { name: '🎖️ Patente', value: currentRank, inline: true },
-        { name: '🆔 ID', value: memberIdRecord ? memberIdRecord.memberId : 'N/A', inline: true },
+        { name: '🆔 ID', value: memberIdRecord ? memberIdRecord.discordId : (member.displayName.match(/\|\s*(\d+)/) ? member.displayName.match(/\|\s*(\d+)/)[1] : 'N/A'), inline: true },
         { name: '📅 Data de Entrada', value: joinDate, inline: true },
         { name: '📈 Último Up', value: lastPromotion, inline: true },
-        { name: '⏰ Horas Totais', value: `${totalHours}h`, inline: true },
+        { name: '⏰ Horas Semanais', value: `${totalHours}h`, inline: true },
         {
           name: '📋 Relatórios',
           value: `Total: **${totalRelatorios}**\nAções (cmd): **${actionCount}**\nAções (part): **${actionParticipations}**\nPrisões: **${prisonCount}**\nApreensões: **${apreensaoCount}**`,
@@ -145,12 +209,82 @@ async function showUserInfo(interaction, targetUserId, ephemeral = true) {
           inline: true,
         },
       )
-      .setFooter({ text: config.branding.footerText })
+
+    // ═══════════ PROGRESSO DE PROMOÇÃO ═══════════
+    const reqs = currentRankKey ? config.promotionRequirements[currentRankKey] : null
+    if (reqs) {
+      const totalAcaoApreensao = actionCount + actionParticipations + apreensaoCount + apreensaoParticipations
+      const totalPrisao = prisonCount + prisonParticipations
+      const diasNoCargo = Math.floor((Date.now() - lastPromotionDate.getTime()) / (1000 * 60 * 60 * 24))
+
+      if (reqs.indicacao) {
+        // MAJ e TCOR - indicação
+        const diasReq = Math.max(reqs.dias - dayReduction, 0)
+        const diasOk = diasNoCargo >= diasReq ? '✅' : '❌'
+        const reducaoText = dayReduction > 0 ? ` (-${dayReduction} loja)` : ''
+        embed.addFields({
+          name: `📊 Progresso para ${reqs.label.split(' → ')[1]}`,
+          value: `🏛️ Indicação do Alto Comando\n📅 Dias: **${diasNoCargo}/${diasReq}** ${diasOk}${reducaoText}`,
+          inline: false,
+        })
+      } else {
+        const diasReq = Math.max(reqs.dias - dayReduction, 0)
+        const reducaoText = dayReduction > 0 ? ` (-${dayReduction} loja)` : ''
+
+        const acaoOk = totalAcaoApreensao >= reqs.apreensaoAcao ? '✅' : '❌'
+        const prisaoOk = totalPrisao >= reqs.prisao ? '✅' : '❌'
+        const diasOk = diasNoCargo >= diasReq ? '✅' : '❌'
+
+        const lines = []
+        if (reqs.cursoMAA) {
+          lines.push(`📋 Curso MAA: ${hasCursoMAA ? '✅' : '❌'}`)
+        }
+        lines.push(`🔫 Ações/Apreensões: **${totalAcaoApreensao}/${reqs.apreensaoAcao}** ${acaoOk}`)
+        lines.push(`🚔 Prisões: **${totalPrisao}/${reqs.prisao}** ${prisaoOk}`)
+        if (reqs.horasPatrulha > 0) {
+          const horasOk = accumulatedHours >= reqs.horasPatrulha ? '✅' : '❌'
+          lines.push(`⏰ Horas: **${accumulatedHours.toFixed(1)}/${reqs.horasPatrulha}h** ${horasOk}`)
+        }
+        if (reqs.cursosAcao > 0) {
+          const cursosOk = actionCourseCount >= reqs.cursosAcao ? '✅' : '❌'
+          lines.push(`🎓 Cursos Ação: **${actionCourseCount}/${reqs.cursosAcao}** ${cursosOk}`)
+        }
+        if (reqs.semAdvertencia) {
+          const advOk = warningCount === 0 ? '✅' : '❌'
+          lines.push(`⚠️ Advertências: **${warningCount}** ${advOk}`)
+        }
+        lines.push(`📅 Dias: **${diasNoCargo}/${diasReq}** ${diasOk}${reducaoText}`)
+
+        embed.addFields({
+          name: `📊 Progresso para ${reqs.label.split(' → ')[1]}`,
+          value: lines.join('\n'),
+          inline: false,
+        })
+      }
+    }
+
+    embed.setFooter({ text: config.branding.footerText })
       .setTimestamp()
 
     // Adiciona foto de identificação se existir
+    const files = []
     if (identification && identification.fotoUrl) {
-      embed.setImage(identification.fotoUrl)
+      const fotoPath = identification.fotoUrl
+      // Se é um path local (salvo pelo sistema)
+      if (!fotoPath.startsWith('http') && fs.existsSync(fotoPath)) {
+        const file = new AttachmentBuilder(fotoPath, { name: 'identificacao.png' })
+        files.push(file)
+        embed.setImage('attachment://identificacao.png')
+      } else if (fotoPath.startsWith('http')) {
+        // URL antiga — tenta usar como attachment
+        try {
+          const file = new AttachmentBuilder(fotoPath, { name: 'identificacao.png' })
+          files.push(file)
+          embed.setImage('attachment://identificacao.png')
+        } catch {
+          embed.setImage(fotoPath)
+        }
+      }
       embed.addFields({
         name: '📸 Identificação',
         value: `Válida até: ${new Date(identification.dataExpiracao).toLocaleDateString('pt-BR')}`,
@@ -158,10 +292,10 @@ async function showUserInfo(interaction, targetUserId, ephemeral = true) {
       })
     }
 
-    await interaction.editReply({ embeds: [embed] })
+    await interaction.editReply({ embeds: [embed], files })
   } catch (error) {
     console.error('Erro ao mostrar informações:', error)
-    await interaction.editReply({ content: '❌ Erro ao buscar informações.' })
+    await interaction.editReply({ content: `❌ Erro ao buscar informações.\n\`\`\`${error.message}\`\`\`` })
   }
 }
 
@@ -172,14 +306,14 @@ async function handleCadastrarPonto(interaction) {
     const member = interaction.member
     const { MemberID } = require('../database')
 
-    // Verifica se já está cadastrado
+    // Verifica se já está cadastrado (memberId = Discord user ID, que é a PK)
     const existing = await MemberID.findOne({
-      where: { discordId: member.id },
+      where: { memberId: member.id },
     })
 
     if (existing) {
       return await interaction.editReply({
-        content: `✅ Você já está cadastrado!\n🆔 ID: **${existing.memberId}**\n👤 Nome: **${existing.memberName}**`,
+        content: `✅ Você já está cadastrado!\n🆔 ID: **${existing.discordId}**\n👤 Nome: **${existing.memberName}**`,
       })
     }
 
@@ -194,17 +328,17 @@ async function handleCadastrarPonto(interaction) {
       })
     }
 
-    const memberId = idMatch[1]
+    const inGameId = idMatch[1]
     const memberName = nameMatch ? nameMatch[1].trim() : nickname
 
     await MemberID.create({
       memberName,
-      discordId: member.id,
-      memberId,
+      discordId: inGameId,      // in-game ID
+      memberId: member.id,      // Discord user ID (PK)
     })
 
     await interaction.editReply({
-      content: `✅ Cadastro realizado com sucesso!\n🆔 ID: **${memberId}**\n👤 Nome: **${memberName}**`,
+      content: `✅ Cadastro realizado com sucesso!\n🆔 ID: **${inGameId}**\n👤 Nome: **${memberName}**`,
     })
   } catch (error) {
     console.error('Erro ao cadastrar ponto:', error)

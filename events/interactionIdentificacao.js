@@ -33,9 +33,7 @@ const fetch = (...args) =>
 const { Identificacao } = require('../database.js')
 
 // Diretório e URL de anexos
-const TRANSCRIPTS_DIR =
-  process.env.TRANSCRIPTS_DIR || path.join(__dirname, '..', 'transcripts')
-const ATTACHMENTS_DIR = path.join(TRANSCRIPTS_DIR, 'attachments', 'identificacoes')
+const ATTACHMENTS_DIR = path.join(__dirname, '..', 'attachments', 'identificacoes')
 const STATIC_BASE_URL =
   process.env.STATIC_BASE_URL ||
   'https://www.bpolpolice.com.br/transcripts/attachments/identificacoes'
@@ -50,8 +48,8 @@ fs.mkdirSync(ATTACHMENTS_DIR, { recursive: true })
 // Mapa para impedir múltiplas identificações simultâneas
 const activeIdentifications = new Map()
 
-// IDs dos cargos autorizados a negar
-const ALLOWED_ROLES = config.permissions.corregedoria
+// IDs dos cargos autorizados a negar (RH+)
+const ALLOWED_ROLES = config.permissions.rhPlus
 
 module.exports = {
   name: Events.InteractionCreate,
@@ -186,7 +184,7 @@ module.exports = {
         try {
           const response = await fetch(attachment.url)
           if (!response.ok) throw new Error('URL inacessível')
-          const buffer = await response.buffer()
+          const buffer = Buffer.from(await response.arrayBuffer())
 
           const ext = path.extname(attachment.name) || '.png'
           const fileName = `ident_${userId}_${Date.now()}${ext}`
@@ -296,38 +294,67 @@ module.exports = {
 
         await registroExistente.update({ messageId: sentMessage.id })
 
-        // Log para servidor de logs
-        ;(async () => {
-          try {
-            const logGuild = await interaction.client.guilds.fetch(LOG_GUILD_ID).catch(() => null)
-            if (!logGuild) return
-            const logChannel = logGuild.channels.cache.get(LOG_CHANNEL_ID)
-              || await logGuild.channels.fetch(LOG_CHANNEL_ID).catch(() => null)
-            if (!logChannel?.isTextBased()) return
+        // Log de identificação aceita na guild de logs
+        try {
+          const logGuild = await interaction.client.guilds
+            .fetch(LOG_GUILD_ID)
+            .catch(() => null)
+          if (logGuild) {
+            const logChannel =
+              logGuild.channels.cache.get(LOG_CHANNEL_ID) ||
+              (await logGuild.channels.fetch(LOG_CHANNEL_ID).catch(() => null))
+            if (logChannel && logChannel.isTextBased()) {
+              const logFiles = []
+              const fotoName = path.basename(publicUrl || '')
+              const localFoto = path.join(ATTACHMENTS_DIR, fotoName)
+              if (fs.existsSync(localFoto)) {
+                logFiles.push(
+                  new AttachmentBuilder(localFoto, { name: 'ident_aceita.png' }),
+                )
+              }
 
-            const embedLog = new EmbedBuilder()
-              .setColor(0x2f3136)
-              .setAuthor({
-                name: `${config.branding.footerText} - Log de Identificações`,
-                iconURL: interaction.guild.iconURL() ?? undefined,
-              })
-              .setTitle(registroExistente ? '🔄 Identificação Atualizada' : '🪪 Nova Identificação')
-              .addFields(
-                { name: '👤 Oficial', value: `<@${userId}>`, inline: true },
-                { name: '📅 Registro', value: `<t:${registroUnix}:F>`, inline: true },
-                { name: '⏰ Expira', value: `<t:${expiracaoUnix}:R>`, inline: true },
-              )
-              .setImage(publicUrl)
-              .setFooter({
-                text: `Sistema de Identificações - ${config.branding.footerText}`,
-                iconURL: interaction.client.user.displayAvatarURL(),
-              })
+              const embedLogAceita = new EmbedBuilder()
+                .setColor(0x2ecc71)
+                .setAuthor({
+                  name: `${config.branding.footerText} - Log de Identificações`,
+                  iconURL: interaction.guild.iconURL() ?? undefined,
+                })
+                .setTitle('📸 Identificação Aceita')
+                .addFields(
+                  {
+                    name: '👤 Oficial',
+                    value: `<@${userId}>`,
+                    inline: true,
+                  },
+                  {
+                    name: '📅 Data Registro',
+                    value: `<t:${registroUnix}:F>`,
+                    inline: true,
+                  },
+                  {
+                    name: '⏰ Data Expiração',
+                    value: `<t:${expiracaoUnix}:F>`,
+                    inline: true,
+                  },
+                )
+                .setFooter({
+                  text: `Sistema de Identificações - ${config.branding.footerText}`,
+                  iconURL: interaction.client.user.displayAvatarURL(),
+                })
+                .setTimestamp()
 
-            await logChannel.send({ embeds: [embedLog] })
-          } catch (err) {
-            console.error('Erro ao enviar log de identificação para servidor de logs:', err)
+              if (logFiles.length > 0) {
+                embedLogAceita.setImage('attachment://ident_aceita.png')
+              } else if (publicUrl) {
+                embedLogAceita.setImage(publicUrl)
+              }
+
+              await logChannel.send({ embeds: [embedLogAceita], files: logFiles })
+            }
           }
-        })()
+        } catch (err) {
+          console.error('Erro ao enviar log de identificação aceita:', err)
+        }
       })
 
       collector.on('end', async collected => {

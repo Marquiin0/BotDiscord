@@ -8,7 +8,9 @@ const {
   PermissionsBitField,
   MessageFlags,
 } = require('discord.js')
+const path = require('path')
 const config = require('../config')
+const { attachImage } = require('../utils/attachImage')
 
 const lojaItens = [
   { nome: 'Descalço 1 dia', valor: 200 },
@@ -23,6 +25,7 @@ const lojaItens = [
   { nome: '-10 dias promoção', valor: 700 },
   { nome: 'Remover ADV', valor: 1000 },
   { nome: '-15 dias promoção (Premium)', valor: 1000 },
+  { nome: 'Item Misterioso', valor: 300 },
 ]
 
 module.exports = {
@@ -57,7 +60,6 @@ module.exports = {
         `  • 💡 **Dica:** Confira sempre as descrições para aproveitar ao máximo suas compras!`,
       )
       .setColor(config.branding.color)
-      .setImage(config.branding.bannerUrl)
       .setFooter({
         text: `Loja Donater - ${config.branding.footerText}`,
         iconURL: interaction.client.user.displayAvatarURL(),
@@ -98,7 +100,10 @@ module.exports = {
         .addOptions(options),
     )
 
-    await channel.send({ embeds: [embed], components: [buttonsRow, selectRow] })
+    const banner = attachImage(path.join(__dirname, '..', config.branding.bannerPath))
+    embed.setImage(banner.url)
+
+    await channel.send({ embeds: [embed], components: [buttonsRow, selectRow], files: [banner.attachment] })
 
     await interaction.reply({
       content: `✅ Embed da Loja criado no canal <#${config.channels.loja}>!`,

@@ -3,6 +3,7 @@ const { Routes } = require('discord-api-types/v9');
 const { SlashCommandBuilder } = require('discord.js');
 const fs = require('fs');
 require('dotenv').config();
+const config = require('./config');
 
 const commands = [];
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
@@ -16,25 +17,26 @@ for (const file of commandFiles) {
 
 const rest = new REST({ version: '9' }).setToken(process.env.TOKEN);
 
-const FTO_GUILD_ID = '1477473906863505582';
+// Guilds onde registrar os comandos: principal + batalhões
+const guildIds = [
+    process.env.GUILD_ID,
+    ...config.battalions.map(b => b.guildId),
+    config.guilds.logs,
+];
 
 (async () => {
     try {
         console.log('Started refreshing application (/) commands.');
 
-        await rest.put(
-            Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
-            { body: commands },
-        );
-        console.log(`Commands deployed to main guild (${process.env.GUILD_ID}).`);
+        for (const guildId of guildIds) {
+            await rest.put(
+                Routes.applicationGuildCommands(process.env.CLIENT_ID, guildId),
+                { body: commands },
+            );
+            console.log(`Commands registered in guild: ${guildId}`);
+        }
 
-        await rest.put(
-            Routes.applicationGuildCommands(process.env.CLIENT_ID, FTO_GUILD_ID),
-            { body: commands },
-        );
-        console.log(`Commands deployed to FTO guild (${FTO_GUILD_ID}).`);
-
-        console.log('Successfully reloaded application (/) commands.');
+        console.log('Successfully reloaded application (/) commands in all guilds.');
     } catch (error) {
         console.error(error);
     }

@@ -9,7 +9,9 @@ const { ActionReports, PrisonReports } = require('../database.js')
 const { Op } = require('sequelize')
 const { PermissionsBitField } = require('discord.js')
 const { MessageFlags } = require('discord.js')
+const path = require('path')
 const config = require('../config')
+const { attachImage } = require('../utils/attachImage')
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -42,8 +44,10 @@ module.exports = {
           '📈 **Seu desempenho será analisado com base em sua atividade de patrulha, suas ações, apreensões e prisões registradas.**\n\n' +
           '*Aguarde a análise do alto comando após solicitar.*',
       )
-      .setImage(config.branding.bannerUrl)
       .setFooter({ text: `${config.branding.footerText} - Sistema de Promoções` })
+
+    const banner = attachImage(path.join(__dirname, '..', config.branding.bannerPath))
+    embed.setImage(banner.url)
 
     // Criando botão de solicitação
     const actionRow = new ActionRowBuilder().addComponents(
@@ -63,7 +67,7 @@ module.exports = {
       })
     }
 
-    await promotionChannel.send({ embeds: [embed], components: [actionRow] })
+    await promotionChannel.send({ embeds: [embed], components: [actionRow], files: [banner.attachment] })
 
     await interaction.reply({
       content: '✅ Painel de solicitação de promoção criado com sucesso!',

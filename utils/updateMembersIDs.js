@@ -1,4 +1,4 @@
-const { MemberID } = require('../database.js');
+const { MemberID, PatrolSession } = require('../database.js');
 const config = require('../config');
 
 async function updateMemberIDs(guild, channelId = null) {
@@ -66,6 +66,20 @@ async function updateMemberIDs(guild, channelId = null) {
             // Recarregar a instância após a inserção
             await newMember.reload();
         }
+    }
+
+    // Backfill PatrolSessions com discordId null
+    try {
+        const orphanSessions = await PatrolSession.findAll({ where: { discordId: null } });
+        for (const session of orphanSessions) {
+            const match = await MemberID.findOne({ where: { discordId: session.inGameId } });
+            if (match) {
+                await session.update({ discordId: match.memberId });
+                console.log(`[UpdateMemberIDs] Backfill: sessão ${session.id} vinculada ao Discord ID ${match.memberId}`);
+            }
+        }
+    } catch (err) {
+        console.error('[UpdateMemberIDs] Erro no backfill de PatrolSessions:', err);
     }
 
     console.log('IDs atualizados com sucesso.');

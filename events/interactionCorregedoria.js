@@ -12,9 +12,6 @@ const {
 const { Warning, PromotionRecords, ActionReports, PrisonReports, ApreensaoReports } = require('../database')
 const config = require('../config')
 
-// Armazena confirmações pendentes de exoneração (userId -> { targetId, timestamp })
-const pendingExonerations = new Map()
-
 module.exports = {
   name: 'interactionCreate',
   async execute(interaction, client) {
@@ -41,9 +38,9 @@ module.exports = {
           components: [],
         })
       }
-      // Exonerar (primeira confirmação)
+      // Exonerar (abre modal de motivo)
       if (interaction.customId.startsWith('corr_exonerar_')) {
-        return handleExonerarFirstCheck(interaction)
+        return handleExonerarModal(interaction)
       }
       // Promover (via corregedoria)
       if (interaction.customId.startsWith('corr_promover_')) {
@@ -81,6 +78,9 @@ module.exports = {
     if (interaction.isModalSubmit()) {
       if (interaction.customId.startsWith('modal_adv_')) {
         return handleAdvSubmit(interaction)
+      }
+      if (interaction.customId.startsWith('modal_exonerar_')) {
+        return handleExonerarConfirm(interaction)
       }
     }
   },
@@ -237,14 +237,40 @@ async function handleAdvSubmit(interaction) {
 
 // ==================== EXONERAR HANDLERS ====================
 
-async function handleExonerarFirstCheck(interaction) {
+// Armazena motivos pendentes de exoneração
+const pendingExonerationReasons = new Map()
+
+async function handleExonerarModal(interaction) {
   const targetId = interaction.customId.split('_').pop()
+
+  const modal = new ModalBuilder()
+    .setCustomId(`modal_exonerar_${targetId}`)
+    .setTitle('Exoneração - Motivo')
+
+  const motivoInput = new TextInputBuilder()
+    .setCustomId('exonerar_motivo')
+    .setLabel('Motivo da exoneração')
+    .setStyle(TextInputStyle.Paragraph)
+    .setRequired(true)
+    .setMaxLength(1000)
+
+  modal.addComponents(new ActionRowBuilder().addComponents(motivoInput))
+  await interaction.showModal(modal)
+}
+
+async function handleExonerarConfirm(interaction) {
+  const targetId = interaction.customId.split('_').pop()
+  const motivo = interaction.fields.getTextInputValue('exonerar_motivo')
+
+  // Salva o motivo para usar na confirmação final
+  pendingExonerationReasons.set(`${interaction.user.id}_${targetId}`, motivo)
 
   const confirmEmbed = new EmbedBuilder()
     .setColor('#FF0000')
     .setTitle('⚠️ Confirmação de Exoneração')
     .setDescription(
       `Você está prestes a exonerar <@${targetId}>.\n\n` +
+      `**Motivo:** ${motivo}\n\n` +
       `**Esta ação é irreversível!** Todos os cargos serão removidos.\n\n` +
       `Clique em **Confirmar** para prosseguir.`,
     )
@@ -260,14 +286,19 @@ async function handleExonerarFirstCheck(interaction) {
       .setStyle(ButtonStyle.Secondary),
   )
 
-  await interaction.update({
+  await interaction.reply({
     embeds: [confirmEmbed],
     components: [buttons],
+    flags: MessageFlags.Ephemeral,
   })
 }
 
 async function handleExonerarSecondCheck(interaction) {
   const targetId = interaction.customId.split('_').pop()
+
+  // Buscar motivo salvo
+  const motivo = pendingExonerationReasons.get(`${interaction.user.id}_${targetId}`) || 'Não especificado'
+  pendingExonerationReasons.delete(`${interaction.user.id}_${targetId}`)
 
   await interaction.deferUpdate()
 
@@ -298,6 +329,7 @@ async function handleExonerarSecondCheck(interaction) {
       .setDescription('É com profundo pesar que concedemos a seguinte ordem de exoneração:')
       .addFields(
         { name: '❌ Oficial Exonerado', value: `<@${targetId}>`, inline: false },
+        { name: '📝 Motivo', value: motivo, inline: false },
         { name: '👮 Exonerado por', value: `<@${interaction.user.id}>`, inline: false },
       )
       .addFields({
@@ -335,6 +367,7 @@ async function handleExonerarSecondCheck(interaction) {
       .setTitle(`❌ ${config.branding.name} - Exoneração`)
       .setDescription(
         `Você foi exonerado(a) da ${config.branding.name}.\n\n` +
+        `**Motivo:** ${motivo}\n\n` +
         `Exonerado por: <@${interaction.user.id}>\n\n` +
         `Se você acredita que houve um erro, pode recorrer clicando no botão abaixo.`,
       )

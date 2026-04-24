@@ -12,7 +12,9 @@ const {
 } = require('discord.js')
 const { Ausencia } = require('../database')
 const { MessageFlags } = require('discord.js')
+const path = require('path')
 const config = require('../config')
+const { attachImage } = require('../utils/attachImage')
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -34,7 +36,8 @@ module.exports = {
       .setTitle('🌴 Solicitação de Ausência')
       .setDescription('📅 Selecione a quantidade de dias de ausência.')
       .setColor('#FF0000')
-      .setImage(config.branding.bannerUrl)
+    const banner = attachImage(path.join(__dirname, '..', config.branding.bannerPath))
+    embed.setImage(banner.url)
 
     const selectMenu = new ActionRowBuilder().addComponents(
       new StringSelectMenuBuilder()
@@ -60,7 +63,7 @@ module.exports = {
     // Envia o componente para o canal específico
     const channel = interaction.guild.channels.cache.get(config.channels.ausencia)
     if (channel) {
-      await channel.send({ embeds: [embed], components: [selectMenu, row] })
+      await channel.send({ embeds: [embed], components: [selectMenu, row], files: [banner.attachment] })
       await interaction.reply({
         content: 'Componentes de ausência enviados para o canal especificado.',
         flags: MessageFlags.Ephemeral,
@@ -272,6 +275,31 @@ module.exports = {
 
         await logChannel.send({ embeds: [embed] })
       }
+
+      // Log de ausência cancelada na guild de logs
+      try {
+        const logsGuild = interaction.client.guilds.cache.get(config.guilds.logs)
+        const logChannelLogs = logsGuild?.channels.cache.get(config.logsChannels.ausencia)
+        if (logChannelLogs) {
+          const startDateLog = new Date(ausenciaAtiva.startDate).toLocaleDateString('pt-BR')
+          const endDateLog = new Date(ausenciaAtiva.endDate).toLocaleDateString('pt-BR')
+          const logEmbed = new EmbedBuilder()
+            .setTitle('📋 Log de Ausência - Cancelada')
+            .setColor('#FF0000')
+            .addFields(
+              { name: '👤 Oficial', value: `<@${interaction.user.id}>`, inline: true },
+              { name: '⏱️ Duração', value: `${startDateLog} → ${endDateLog}`, inline: true },
+              { name: '📝 Motivo', value: ausenciaAtiva.motivo || 'Não especificado', inline: false },
+              { name: '📅 Data início', value: startDateLog, inline: true },
+              { name: '📅 Data fim', value: endDateLog, inline: true },
+            )
+            .setFooter({ text: config.branding.footerText })
+            .setTimestamp()
+          await logChannelLogs.send({ embeds: [logEmbed] })
+        }
+      } catch (err) {
+        console.error('[LOG] Erro ao enviar log de ausência cancelada:', err)
+      }
     } catch (error) {
       console.error('Erro ao processar a interação de sair de ausência:', error)
       interaction.reply({
@@ -352,6 +380,29 @@ module.exports = {
           content: 'Sua ausência foi registrada com sucesso.',
           flags: MessageFlags.Ephemeral,
         })
+
+        // Log de ausência criada na guild de logs
+        try {
+          const logsGuild = interaction.client.guilds.cache.get(config.guilds.logs)
+          const logChannelLogs = logsGuild?.channels.cache.get(config.logsChannels.ausencia)
+          if (logChannelLogs) {
+            const logEmbed = new EmbedBuilder()
+              .setTitle('📋 Log de Ausência - Criada')
+              .setColor('#00FF00')
+              .addFields(
+                { name: '👤 Oficial', value: `<@${interaction.user.id}>`, inline: true },
+                { name: '⏱️ Duração', value: `${diasAusencia} dia(s)`, inline: true },
+                { name: '📝 Motivo', value: motivo || 'Não especificado', inline: false },
+                { name: '📅 Data início', value: startDateLocal, inline: true },
+                { name: '📅 Data fim', value: endDateLocal, inline: true },
+              )
+              .setFooter({ text: config.branding.footerText })
+              .setTimestamp()
+            await logChannelLogs.send({ embeds: [logEmbed] })
+          }
+        } catch (err) {
+          console.error('[LOG] Erro ao enviar log de ausência criada:', err)
+        }
 
         // Ao término do período, atualiza o embed para "Inativo" e remove o cargo
         setTimeout(async () => {

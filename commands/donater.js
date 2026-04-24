@@ -1,4 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionsBitField } = require('discord.js');
+const config = require('../config');
 const {
   UserPontos,
   UserMultiplicadores,
@@ -51,15 +52,14 @@ module.exports = {
     ),
 
   async execute(interaction) {
-    // Apenas administradores podem usar este comando
+    // Apenas SCMD e CMD podem usar este comando
     const hasAdmin = interaction.member.permissions.has(
       PermissionsBitField.Flags.Administrator
     );
-    const canUseCommands = interaction.memberPermissions.has(
-      PermissionsBitField.Flags.UseApplicationCommands
-    );
+    const isSCMDorCMD = interaction.member.roles.cache.has(config.ranks.SCMD.roleId) ||
+      interaction.member.roles.cache.has(config.ranks.CMD.roleId);
 
-    if (!hasAdmin && !canUseCommands) {
+    if (!hasAdmin && !isSCMDorCMD) {
       return interaction.reply({
         content: '❌ Você não tem permissão.',
         flags: MessageFlags.Ephemeral,

@@ -1,7 +1,9 @@
 const config = require('../config')
+const schedule = require('node-schedule')
 const checkExpiredWarnings = require('../utils/checkExpiredWarnings')
 const checkExpiredLoja = require('../utils/checkExpiredLoja')
-const { Warning } = require('../database')
+const checkExpiredBlacklist = require('../utils/checkExpiredBlacklist')
+const { Warning, PatrolSession } = require('../database')
 const updateMemberIDs = require('../utils/updateMembersIDs')
 const { updateHierarchy } = require('../utils/updateHierarchy')
 const patrolCommand = require('../commands/patrulha')
@@ -12,10 +14,14 @@ const {
   notifyExpiredIdentifications,
   alertStaffExpiredIdentifications,
   reportIdentificationStatus,
+  reportMAAStatus,
 } = require('../utils/identificationExpiryUtils')
 const { startDonationChecks } = require('../utils/donationScheduler')
+const { generateWeeklyPatrolReport } = require('../utils/weeklyPatrolReport')
+const { checkLongPatrolSessions } = require('../utils/patrolSessionCheck')
 const { Op } = require('sequelize')
 const { EmbedBuilder } = require('discord.js')
+const moment = require('moment-timezone')
 
 async function fetchMessagesInBatches(channel, limit = 500) {
   let allMessages = []
@@ -152,6 +158,47 @@ module.exports = {
     console.log(`Logado como: ${client.user.tag}`)
     client.botIsReady = true
 
+    // ==================== LIMPEZA DE SESSÕES ÓRFÃS ====================
+    try {
+      const twelveHoursAgo = moment().subtract(12, 'hours').toDate()
+
+      // 1. Fechar sessões abandonadas (>12h, sem nextCheckAt — crash check enviado mas nunca respondido)
+      const abandonedSessions = await PatrolSession.findAll({
+        where: {
+          exitTime: null,
+          nextCheckAt: null,
+          entryTime: { [Op.lte]: twelveHoursAgo },
+        },
+      })
+
+      for (const session of abandonedSessions) {
+        const exitTime = moment(session.entryTime).add(3, 'hours').toDate()
+        await session.update({ exitTime, duration: 3.0, nextCheckAt: null })
+      }
+
+      if (abandonedSessions.length > 0) {
+        console.log(`[Startup] ${abandonedSessions.length} sessões órfãs fechadas (>12h sem resposta)`)
+      }
+
+      // 2. Re-agendar nextCheckAt para sessões abertas que perderam o timer (bot reiniciou)
+      const openSessionsNoCheck = await PatrolSession.findAll({
+        where: {
+          exitTime: null,
+          nextCheckAt: { [Op.lte]: new Date() }, // nextCheckAt já passou
+        },
+      })
+
+      for (const session of openSessionsNoCheck) {
+        await session.update({ nextCheckAt: moment().add(10, 'minutes').toDate() })
+      }
+
+      if (openSessionsNoCheck.length > 0) {
+        console.log(`[Startup] ${openSessionsNoCheck.length} sessões re-agendadas para crash check em 10min`)
+      }
+    } catch (err) {
+      console.error('[Startup] Erro na limpeza de sessões órfãs:', err)
+    }
+
     // Verificação de ausências a cada 12 horas
     setInterval(() => checkExpiredAusencias(client), 12 * 60 * 60 * 1000)
 
@@ -168,21 +215,20 @@ module.exports = {
     }
     setInterval(executePatrolPeriodically, 21600000)
 
-    // Verifica advertências expiradas
-    checkExpiredWarnings(client)
-
-    // Leaderboard update (desativado)
-    // startLeaderboardUpdate(client)
+    // Leaderboard update
+    startLeaderboardUpdate(client)
 
     // Identificação expirada (DM + alerta staff a cada 6h)
     setInterval(async () => {
       await notifyExpiredIdentifications(client)
     }, 21600000)
 
-    // Relatório identificação a cada 1h
-    setInterval(async () => {
+    // Relatório identificação + MAA todo dia às 18h (horário Brasília = 21h UTC)
+    schedule.scheduleJob({ hour: 21, minute: 0, tz: 'America/Sao_Paulo' }, async () => {
+      console.log('[SCHEDULE] Enviando relatórios de identificação e MAA (18h)')
       await reportIdentificationStatus(client)
-    }, 3600000)
+      await reportMAAStatus(client)
+    })
 
     // Advertências expiradas (check frequente)
     setInterval(() => {
@@ -194,10 +240,18 @@ module.exports = {
       checkExpiredLoja(client)
     }, 23200)
 
+    // Blacklist de unidades expirada
+    setInterval(() => {
+      checkExpiredBlacklist(client)
+    }, 60000) // Verifica a cada 1 minuto
+
     // Apostas expiradas
     setInterval(() => {
       closeExpiredBetsOnReady(client)
     }, 60000)
+
+    // Verificação de sessões de patrulha longas (DM após 3h)
+    setInterval(() => checkLongPatrolSessions(client), 5 * 60 * 1000)
 
     // Atualiza BD de IDs a cada 15min
     setInterval(async () => {
@@ -207,15 +261,31 @@ module.exports = {
       }
     }, 900000)
 
-    // Atualizar hierarquia: principal caminho é event-driven
-    // (events/guildMember{Update,Add,Remove}.js). Este timer é safety net
-    // pra capturar qualquer evento perdido.
+    // Atualizar hierarquia (Eclipse Police)
     setInterval(async () => {
       const guild = client.guilds.cache.get(config.guilds.main)
       if (guild) {
         await updateHierarchy(guild, config.channels.hierarquia)
       }
-    }, 1800000) // 30 minutos
+    }, 1800000) // 30 minutos (safety net — event-driven handles real-time updates)
+
+    // Relatório semanal de patrulha (domingo 00:00 São Paulo)
+    let lastPatrolReportWeek = null
+    setInterval(async () => {
+      const moment = require('moment-timezone')
+      const now = moment().tz('America/Sao_Paulo')
+      const weekId = now.format('YYYY-WW')
+
+      if (now.day() === 0 && now.hour() === 0 && now.minute() < 5 && lastPatrolReportWeek !== weekId) {
+        lastPatrolReportWeek = weekId
+        try {
+          await generateWeeklyPatrolReport(client)
+          console.log('[WeeklyPatrol] Relatório semanal gerado com sucesso.')
+        } catch (err) {
+          console.error('[WeeklyPatrol] Erro ao gerar relatório semanal:', err)
+        }
+      }
+    }, 60000) // Verifica a cada 1 minuto
 
     // Chama a função que apaga automaticamente canais "registro-"
     deleteProvaChannels(client)

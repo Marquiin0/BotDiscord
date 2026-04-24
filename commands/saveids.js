@@ -1,6 +1,6 @@
-const { SlashCommandBuilder, PermissionsBitField } = require('discord.js')
-const updateMemberIDs = require('../utils/updateMembersIDs') // Importe a função refatorada
-const { MessageFlags } = require('discord.js')
+const { SlashCommandBuilder, PermissionsBitField, MessageFlags } = require('discord.js')
+const updateMemberIDs = require('../utils/updateMembersIDs')
+const config = require('../config')
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -11,7 +11,7 @@ module.exports = {
   async execute(interaction) {
     if (
       !interaction.member.permissions.has(PermissionsBitField.Flags.Administrator) &&
-      !interaction.memberPermissions.has(PermissionsBitField.Flags.UseApplicationCommands)
+      !interaction.member.roles.cache.hasAny(...config.permissions.rhPlus)
     ) {
       return interaction.reply({
         content: '❌ Você não tem permissão.',

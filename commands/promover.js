@@ -14,6 +14,14 @@ const { Warning } = require('../database')
 const { Op } = require('sequelize')
 const config = require('../config')
 
+function getRankTag(roleId) {
+  if (roleId === config.roles.rh) return '[R.H]'
+  for (const key of config.rankOrder) {
+    if (config.ranks[key].roleId === roleId) return config.ranks[key].tag
+  }
+  return 'Cargo desconhecido'
+}
+
 const promotionTags = config.promotionTags
 
 module.exports = {
@@ -36,6 +44,7 @@ module.exports = {
             name: config.ranks[key].tag,
             value: config.ranks[key].roleId,
           })),
+          { name: '[R.H]', value: config.roles.rh },
         ),
     ),
 
@@ -44,9 +53,7 @@ module.exports = {
       !interaction.member.permissions.has(
         PermissionsBitField.Flags.Administrator,
       ) &&
-      !interaction.memberPermissions.has(
-        PermissionsBitField.Flags.UseApplicationCommands,
-      )
+      !interaction.member.roles.cache.hasAny(...config.permissions.rhPlus)
     ) {
       return interaction.reply({
         content: '❌ Você não tem permissão para usar este comando.',
@@ -57,8 +64,35 @@ module.exports = {
     await interaction.deferReply({ ephemeral: true })
 
     try {
-      const user = interaction.options.getUser('usuario')
       const newRoleId = interaction.options.getString('cargo')
+
+      // Verificar limite de promoção por cargo (exceto admins)
+      if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+        for (const [roleId, maxRankKey] of Object.entries(config.permissions.promotionLimits)) {
+          if (interaction.member.roles.cache.has(roleId)) {
+            const maxIndex = config.rankOrder.indexOf(maxRankKey)
+            // Encontrar o rank key do cargo selecionado
+            let selectedRankKey = null
+            for (const key of config.rankOrder) {
+              if (config.ranks[key] && config.ranks[key].roleId === newRoleId) {
+                selectedRankKey = key
+                break
+              }
+            }
+            if (selectedRankKey) {
+              const selectedIndex = config.rankOrder.indexOf(selectedRankKey)
+              if (selectedIndex < maxIndex) {
+                const maxTag = config.ranks[maxRankKey].tag
+                return interaction.editReply({
+                  content: `❌ Você só pode promover até **${maxTag}**. Não tem autorização para cargos acima disso.`,
+                })
+              }
+            }
+            break
+          }
+        }
+      }
+      const user = interaction.options.getUser('usuario')
       const member = interaction.guild.members.cache.get(user.id)
 
       if (!member) {
@@ -67,7 +101,7 @@ module.exports = {
         })
       }
 
-      // Identifica o cargo atual do usuário
+      // Identifica o cargo atual do usuário (patente)
       let oldRoleId = null
       for (const roleId of Object.keys(promotionTags)) {
         if (member.roles.cache.has(roleId)) {
@@ -76,24 +110,40 @@ module.exports = {
         }
       }
 
-      const oldTag = promotionTags[oldRoleId]
-      const newTag = promotionTags[newRoleId]
+      const isRH = newRoleId === config.roles.rh
+      let oldTag, newTag, updatedNickname
 
-      if (!oldRoleId || !newRoleId || !newTag) {
-        return await interaction.editReply({
-          content:
-            '⚠️ O usuário não possui um cargo válido para promoção ou cargo de destino inválido.',
-        })
+      if (isRH) {
+        // R.H é cargo administrativo: adiciona sem remover a patente
+        if (!oldRoleId) {
+          return await interaction.editReply({
+            content: '⚠️ O usuário não possui uma patente válida.',
+          })
+        }
+        await member.roles.add(newRoleId).catch(console.error)
+        updatedNickname = member.displayName.replace(/\[.*?\]/, '[R.H]')
+        await member.setNickname(updatedNickname).catch(console.error)
+        oldTag = promotionTags[oldRoleId]
+        newTag = '[R.H]'
+      } else {
+        oldTag = promotionTags[oldRoleId]
+        newTag = promotionTags[newRoleId]
+
+        if (!oldRoleId || !newRoleId || !newTag) {
+          return await interaction.editReply({
+            content:
+              '⚠️ O usuário não possui um cargo válido para promoção ou cargo de destino inválido.',
+          })
+        }
+
+        // Remove o cargo antigo e adiciona o novo
+        await member.roles.remove(oldRoleId).catch(console.error)
+        await member.roles.add(newRoleId).catch(console.error)
+
+        // Atualiza o apelido substituindo a tag antiga pela nova
+        updatedNickname = member.displayName.replace(/\[.*?\]/, newTag)
+        await member.setNickname(updatedNickname).catch(console.error)
       }
-
-      // Remove o cargo antigo e adiciona o novo
-      await member.roles.remove(oldRoleId).catch(console.error)
-      await member.roles.add(newRoleId).catch(console.error)
-
-      // Atualiza o apelido substituindo a tag antiga pela nova
-      const currentNickname = member.displayName
-      const updatedNickname = currentNickname.replace(/\[.*?\]/, newTag)
-      await member.setNickname(updatedNickname).catch(console.error)
 
       // Atualiza o registro de promoção
       await PromotionRecords.upsert({
@@ -181,8 +231,8 @@ module.exports = {
           .setDescription('Uma promoção foi realizada com sucesso.')
           .addFields(
             { name: 'Oficial', value: `<@${user.id}>`, inline: true },
-            { name: 'De', value: `<@&${oldRoleId}>`, inline: true },
-            { name: 'Para', value: `<@&${newRoleId}>`, inline: true },
+            { name: 'De', value: getRankTag(oldRoleId), inline: true },
+            { name: 'Para', value: getRankTag(newRoleId), inline: true },
             {
               name: 'Promovido por',
               value: `<@${interaction.user.id}>`,

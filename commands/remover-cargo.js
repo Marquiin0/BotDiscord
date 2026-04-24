@@ -61,8 +61,8 @@ module.exports = {
             roleToRemove = optionChosen === 'cmd' ? config.ranks.SCMD.roleId : config.roles.membro;
         } else if (memberRoles.has(config.ranks.HC.roleId)) {
             roleToRemove = optionChosen === 'cmd' ? config.ranks.HC.roleId : config.roles.membro;
-        } else if (memberRoles.has(config.ranks.IC.roleId)) {
-            roleToRemove = optionChosen === 'cmd' ? config.ranks.IC.roleId : config.roles.membro;
+        } else if (memberRoles.has(config.ranks.IA.roleId)) {
+            roleToRemove = optionChosen === 'cmd' ? config.ranks.IA.roleId : config.roles.membro;
         } else {
             return interaction.reply({
                 content: 'Lógica para o seu cargo ainda não foi implementada.',

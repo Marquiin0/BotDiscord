@@ -13,7 +13,9 @@ const {
 } = require('discord.js')
 
 const { Op } = require('sequelize')
+const path = require('path')
 const config = require('../config')
+const { attachImage } = require('../utils/attachImage')
 const { UserPontos, UserActions, Bet } = require('../database')
 
 // Calcula ROI (Odds)
@@ -343,7 +345,6 @@ module.exports = {
               `Se acertar, você dividirá o montante dos perdedores de forma proporcional.\n\n` +
               `**Boa sorte!**`,
             )
-            .setImage(config.branding.bannerUrl)
             .addFields(
               {
                 name: opcao1,
@@ -378,9 +379,13 @@ module.exports = {
               .setStyle(ButtonStyle.Danger),
           )
 
+          const banner = attachImage(path.join(__dirname, '..', config.branding.bannerPath))
+          embedCriacao.setImage(banner.url)
+
           const msgAposta = await betChannel.send({
             embeds: [embedCriacao],
             components: [row],
+            files: [banner.attachment],
           })
 
           const novaBet = await Bet.create({

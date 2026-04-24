@@ -21,17 +21,29 @@ const config = require('../config')
  * Extrai dados de serviço do conteúdo de mensagem (entrada/saída).
  */
 const extractServiceData = messageContent => {
-  const servicePattern =
+  // Formato antigo: [3°BPM/Eclipse Police]: ID Username \n[===== ENTROU/SAIU =====]\n[Data]: DD/MM/YYYY [Hora]: HH:MM:SS
+  const oldPattern =
     /\[(?:3°BPM\.permissao|3°BPM|3°BPM|Eclipse Police\.permissao|Eclipse Police)\]:\s*(\d+)\s*(.*?)\s*\r?\n\[\=+\s*(ENTROU\s+(?:EM|DE)\s+SERVICO|SAIU\s+DE\s+SERVICO)\s*\=+\]\s*\r?\n\[Data\]:\s*(\d{2}\/\d{2}\/\d{4})\s*\[Hora\]:\s*(\d{2}:\d{2}:\d{2})/gi
 
-  const matches = [...messageContent.matchAll(servicePattern)]
-
-  return matches.map(match => ({
+  const oldMatches = [...messageContent.matchAll(oldPattern)].map(match => ({
     userId: match[1],
     userName: match[2].trim(),
     action: match[3].includes('ENTROU') ? 'ENTROU' : 'SAIU',
     date: `${match[4]} ${match[5]}`,
   }))
+
+  // Formato novo: [TOGGLE]: policia \n[MEMBRO]: ID Nome \n[STATUS]: Entrou/Saiu em serviço \n[DATA]: DD/MM/YYYY [HORA]: HH:MM:SS
+  const newPattern =
+    /\[TOGGLE\]:\s*policia\s*\n\[MEMBRO\]:\s*(\d+)\s+(.+?)\s*\n\[STATUS\]:\s*(Entrou em servi[çc]o|Saiu de servi[çc]o)\s*\n\[DATA\]:\s*(\d{2}\/\d{2}\/\d{4})\s+(?:\[HORA\]:\s*)?(\d{2}:\d{2}:\d{2})/gi
+
+  const newMatches = [...messageContent.matchAll(newPattern)].map(match => ({
+    userId: match[1],
+    userName: match[2].trim(),
+    action: match[3].toLowerCase().includes('entrou') ? 'ENTROU' : 'SAIU',
+    date: `${match[4]} ${match[5]}`,
+  }))
+
+  return [...oldMatches, ...newMatches]
 }
 
 /**
@@ -160,9 +172,7 @@ module.exports = {
       !interaction.member.permissions.has(
         PermissionsBitField.Flags.Administrator,
       ) &&
-      !interaction.memberPermissions.has(
-        PermissionsBitField.Flags.UseApplicationCommands,
-      )
+      !interaction.member.roles.cache.hasAny(...config.permissions.rhPlus)
     ) {
       return interaction.reply({
         content: '❌ Você não tem permissão.',
@@ -410,7 +420,7 @@ module.exports = {
         )
         return
       }
-      const otherChannel = otherGuild.channels.cache.get(config.channels.promocaoLog)
+      const otherChannel = otherGuild.channels.cache.get(config.channels.relatorioPatrulha)
       if (!otherChannel) {
         await interaction.editReply(
           'Não foi possível encontrar o outro canal especificado.',

@@ -690,8 +690,8 @@ const Identificacao = sequelize.define('Identificacao', {
       allowNull: false,
     },
     status: {
-        type: DataTypes.ENUM('ativo', 'inativo'),
-        defaultValue: 'ativo', // ou 'inativo', se preferir
+        type: DataTypes.STRING,
+        defaultValue: 'ativo',
         allowNull: false
       },
        messageId: {
@@ -766,7 +766,7 @@ const VictoryDefeat = sequelize.define('VictoryDefeat', {
         allowNull: false,
     },
     type: {
-        type: DataTypes.ENUM('vitoria', 'derrota'),
+        type: DataTypes.STRING,
         allowNull: false,
     },
     actionName: {
@@ -783,17 +783,83 @@ const VictoryDefeat = sequelize.define('VictoryDefeat', {
     timestamps: true,
 });
 
+const ArsenalProcessedLog = sequelize.define('ArsenalProcessedLog', {
+    messageId: {
+        type: DataTypes.STRING,
+        primaryKey: true,
+        allowNull: false,
+    },
+}, {
+    tableName: 'arsenal_processed_logs',
+    timestamps: true,
+});
+
+const ArsenalIsento = sequelize.define('ArsenalIsento', {
+    userId: {
+        type: DataTypes.STRING,
+        primaryKey: true,
+        allowNull: false,
+    },
+    addedBy: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
+}, {
+    tableName: 'arsenal_isentos',
+    timestamps: true,
+});
+
+ArsenalProcessedLog.sync();
+ArsenalIsento.sync();
+QuizResult.sync();
+SetagemConfig.sync();
+VictoryDefeat.sync();
+Identificacao.sync();
+RemovedRole.sync();
+RoleLimit.sync();
+Sorteio.sync()
+Bet.sync()
+Loja.sync();
+DonationRecords.sync();
+UserMultiplicadores.sync();
+UserActions.sync();
+UserPontos.sync();
+Course.sync();
+Inscricao.sync();
+Ticket.sync();
+ApreensaoReports.sync(); // Garante que a tabela será criada
+Aposentadoria.sync(); // Garante que a tabela será criada
+PromotionRecords.sync(); // Garante que a tabela seja criada no banco de dados
+PromotionRequests.sync();
+PrisonReports.sync();
+ActionReports.sync();
+ActionReportsAll.sync();
+UserLog.sync();
+MemberID.sync();
+sequelize.sync({ alter: true });
+PatrolHours.sync();
+WeaponLog.sync();
+UserPoints.sync()
+WeeklyPoints.sync()
+Ausencia.sync()
+PatrolSession.sync()
+
+// Blacklist de unidades (impede entrada em unidades por 7 dias)
 const Blacklist = sequelize.define('Blacklist', {
     userId: { type: DataTypes.STRING, allowNull: false },
     unitName: { type: DataTypes.STRING, allowNull: false },
     reason: { type: DataTypes.TEXT, allowNull: false },
     appliedBy: { type: DataTypes.STRING, allowNull: false },
     expirationDate: { type: DataTypes.DATE, allowNull: false },
-});
+})
+Blacklist.sync()
 
-sequelize.sync({ alter: false }).catch(err => {
-    console.error('[DB] Erro ao sincronizar tabelas:', err.message);
-});
+// Key-value store para configurações persistentes do bot (IDs de mensagens, etc.)
+const BotConfig = sequelize.define('BotConfig', {
+    key: { type: DataTypes.STRING, primaryKey: true, allowNull: false },
+    value: { type: DataTypes.TEXT, allowNull: true },
+})
+BotConfig.sync()
 
 module.exports = {
     UserPoints,
@@ -802,8 +868,6 @@ module.exports = {
     Warning,
     MemberID,
     PatrolHours,
-    PatrolSession,
-    Blacklist,
     WeaponLog,
     WeeklyPoints,
     Ausencia,
@@ -830,6 +894,11 @@ module.exports = {
     QuizResult,
     SetagemConfig,
     VictoryDefeat,
+    ArsenalProcessedLog,
+    ArsenalIsento,
+    PatrolSession,
+    Blacklist,
+    BotConfig,
 };
 
 
