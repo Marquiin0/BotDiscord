@@ -26,7 +26,8 @@ module.exports = {
         ausenciaLog: '1498132392416903198',          // Embeds de ausência aprovadas
         exoneracaoLog: '1474523283935203429',        // Embeds /corregedoria
         setagem: '1474523278373556256',              // Embed "Solicitar Set"
-        setagemAprovacao: '1474523278373556256',     // Aprovação de setagens (mesmo canal por padrão)
+        setagemAprovacao: '1483599311068463205',     // Embeds de aprovação (Aceitar/Recusar)
+        painelInfo: '1498155089700061274',           // Painel "Minhas Informações"
 
         // === Legados Genesis Police (comandos antigos dormentes) ===
         loja: '1477408729313054775',
@@ -38,7 +39,6 @@ module.exports = {
         prisaoEmbed: '1481839335870431252',
         prisaoLog: '1478762158027444285',
         pedidos: '1477408729103335440',
-        painelInfo: '1477408729103335443',
         promocaoLog: '1477408729103335438',
         relatorioPatrulha: '1477408728679714896',
         identificacaoLog: '1477408729103335444',

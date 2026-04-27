@@ -161,10 +161,14 @@ async function handleAceitarSetagem(interaction) {
   await member.roles.add(config.roles.membro).catch(console.error)
   await member.roles.add(config.roles.shadow).catch(console.error)
 
+  // Schema MemberID:
+  //   memberId   = Discord user ID (PK)
+  //   discordId  = ID in-game (nome legado)
+  //   memberName = nome do personagem
   await MemberID.upsert({
     memberName: nome,
-    discordId: targetUserId,
-    memberId: id,
+    discordId: id,
+    memberId: targetUserId,
   })
 
   // Mensagem de boas-vindas (configurável via SetagemConfig)
