@@ -34,15 +34,14 @@ module.exports = {
 
     const embed = new EmbedBuilder()
       .setColor(config.branding.color)
-      .setTitle(`📋 ${config.branding.name} - Solicitar Setagem`)
+      .setTitle(`📋 ${config.branding.name} — Solicitar Setagem`)
       .setDescription(
-        `Bem-vindo ao sistema de setagem da ${config.branding.name}!\n\n` +
-        `Ao clicar no botão abaixo, será criado um canal privado onde você deverá preencher:\n\n` +
-        `1. **Nome do recrutador** (quem te indicou)\n` +
-        `2. **Seu nome** (nome do personagem)\n` +
-        `3. **Seu ID** (ID do personagem)\n` +
-        `4. **Foto do personagem** (fardamento correto)\n\n` +
-        `Após o preenchimento, sua setagem será analisada pelo comando.`,
+        `Bem-vindo ao processo de setagem da **${config.branding.name}**!\n\n` +
+        `Ao clicar no botão abaixo, abrirá um **formulário** para você preencher:\n\n` +
+        `• **Recrutador** — quem te indicou\n` +
+        `• **Nome do personagem**\n` +
+        `• **ID do personagem**\n\n` +
+        `Após enviar, sua solicitação será analisada pelo comando.`,
       )
       .setFooter({ text: config.branding.footerText })
       .setTimestamp()
