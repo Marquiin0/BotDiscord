@@ -158,6 +158,18 @@ module.exports = {
     console.log(`Logado como: ${client.user.tag}`)
     client.botIsReady = true
 
+    // Atualiza a hierarquia uma vez no boot (event-driven cuida do resto)
+    try {
+      const mainGuild = client.guilds.cache.get(config.guilds.main)
+      if (mainGuild) {
+        await updateHierarchy(mainGuild, config.channels.hierarquia)
+      } else {
+        console.warn(`[Startup] Guild principal ${config.guilds.main} não encontrada — hierarquia pulada.`)
+      }
+    } catch (err) {
+      console.error('[Startup] Erro ao atualizar hierarquia:', err)
+    }
+
     // ==================== LIMPEZA DE SESSÕES ÓRFÃS ====================
     try {
       const twelveHoursAgo = moment().subtract(12, 'hours').toDate()
