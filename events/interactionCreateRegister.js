@@ -20,7 +20,7 @@ const config = require('../config')
 const userFormData = new Map()
 
 // IDs de cargo que serão adicionados ao recruta aprovado
-const approvedRoleId = config.ranks.EST.roleId
+const approvedRoleId = config.roles.shadow
 const approvedRoleId2 = config.roles.membro
 
 module.exports = {

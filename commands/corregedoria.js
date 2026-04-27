@@ -31,7 +31,7 @@ module.exports = {
 
     if (!hasPermission) {
       return interaction.reply({
-        content: '❌ Apenas I.C, H.C, SCMD e CMD podem usar este comando.',
+        content: '❌ Apenas Corregedor, Sub Commander e Commander podem usar este comando.',
         flags: MessageFlags.Ephemeral,
       })
     }
@@ -132,6 +132,10 @@ module.exports = {
     )
 
     const row2 = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`corr_advv_${member.id}`)
+        .setLabel('⚠️ ADV Verbal')
+        .setStyle(ButtonStyle.Secondary),
       new ButtonBuilder()
         .setCustomId(`corr_adv1_${member.id}`)
         .setLabel('⚠️ ADV 1')

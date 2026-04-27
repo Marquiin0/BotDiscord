@@ -24,50 +24,34 @@ module.exports = {
         ),
 
     async execute(interaction) {
-        // Verifica se o comando está sendo usado no canal de setagem aprovação
-        if (interaction.channel.id !== config.channels.setagemAprovacao) {
+        // Apenas Sub Commander e Commander podem setar cargos
+        if (!interaction.member.roles.cache.hasAny(...config.permissions.staffMerry)) {
             return interaction.reply({
-                content: 'Este comando só pode ser utilizado neste canal.',
+                content: '❌ Apenas Sub Commander e Commander podem usar este comando.',
                 flags: MessageFlags.Ephemeral
             });
         }
 
-        // Verifica se o usuário tem permissão para usar o comando
-        // NOTE: These sub-division role IDs are from the old guild
-        // Update when new guild sub-division roles are created
-        const cargosPermitidos = config.permissions.corregedoria;
-        if (!interaction.member.roles.cache.some(role => cargosPermitidos.includes(role.id))) {
-            return interaction.reply({
-                content: 'Você não tem permissão para usar este comando.',
-                flags: MessageFlags.Ephemeral
-            });
-        }
-
-        // Após as verificações iniciais, defere a resposta para evitar timeout
         await interaction.deferReply({ ephemeral: true });
 
-        // Obtém os parâmetros do comando
         const membroAlvo = interaction.options.getMember('membro');
         const opcaoEscolhida = interaction.options.getString('opcao');
-        let cargoAtribuir;
-
-        // NOTE: Sub-division role logic - these role IDs need to be updated
-        // when the new guild sub-division roles are created.
-        // For now, using a simplified approach based on rank roles
         const memberRoles = interaction.member.roles.cache;
 
-        if (memberRoles.has(config.ranks.CMD.roleId)) {
-            cargoAtribuir = opcaoEscolhida === 'cmd' ? config.ranks.CMD.roleId : config.roles.membro;
-        } else if (memberRoles.has(config.ranks.SCMD.roleId)) {
-            cargoAtribuir = opcaoEscolhida === 'cmd' ? config.ranks.SCMD.roleId : config.roles.membro;
-        } else if (memberRoles.has(config.ranks.HC.roleId)) {
-            cargoAtribuir = opcaoEscolhida === 'cmd' ? config.ranks.HC.roleId : config.roles.membro;
-        } else if (memberRoles.has(config.ranks.IA.roleId)) {
-            cargoAtribuir = opcaoEscolhida === 'cmd' ? config.ranks.IA.roleId : config.roles.membro;
+        let cargoAtribuir;
+        if (opcaoEscolhida === 'membro') {
+            cargoAtribuir = config.roles.membro;
         } else {
-            return interaction.editReply({
-                content: 'Lógica para o seu cargo ainda não foi implementada.',
-            });
+            // 'cmd' — atribui o mesmo cargo de comando do executor (CMD ou SCMD)
+            if (memberRoles.has(config.ranks.CMD.roleId)) {
+                cargoAtribuir = config.ranks.CMD.roleId;
+            } else if (memberRoles.has(config.ranks.SCMD.roleId)) {
+                cargoAtribuir = config.ranks.SCMD.roleId;
+            } else {
+                return interaction.editReply({
+                    content: '❌ Você não possui um cargo de comando para atribuir.',
+                });
+            }
         }
 
         if (!cargoAtribuir) {

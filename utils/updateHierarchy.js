@@ -1,69 +1,33 @@
+const { EmbedBuilder, AttachmentBuilder } = require('discord.js')
 const { DateTime } = require('luxon')
+const path = require('path')
+const fs = require('fs')
 const config = require('../config')
 const { BotConfig } = require('../database')
 
-const HIERARCHY_KEY = 'hierarchyMessageIds'
+const HIERARCHY_KEY = 'hierarchyMessageId'
 
-// Salvar IDs no banco
-async function saveMessageIds(messageIds) {
-  await BotConfig.upsert({ key: HIERARCHY_KEY, value: JSON.stringify(messageIds) })
+async function saveMessageId(messageId) {
+  await BotConfig.upsert({ key: HIERARCHY_KEY, value: messageId })
 }
 
-// Carregar IDs do banco
-async function loadMessageIds() {
+async function loadMessageId() {
   const record = await BotConfig.findOne({ where: { key: HIERARCHY_KEY } })
-  if (record && record.value) {
-    try {
-      return JSON.parse(record.value)
-    } catch {
-      return []
-    }
-  }
-  return []
+  return record?.value || null
 }
 
-// Dividir mensagens longas em blocos de até 2000 caracteres
-function splitMessage(message, maxLen = 2000) {
-  const parts = []
-  let currentPart = ''
-
-  message.split('\n').forEach(line => {
-    if (currentPart.length + line.length > maxLen) {
-      parts.push(currentPart)
-      currentPart = ''
-    }
-    currentPart += line + '\n'
-  })
-
-  if (currentPart.length) {
-    parts.push(currentPart)
-  }
-
-  return parts
-}
-
-// Construir roleCategoryMap a partir de config.ranks
 const roleCategoryMap = {}
 for (const key of config.rankOrder) {
   const rank = config.ranks[key]
-  roleCategoryMap[rank.roleId] = { category: rank.name, fullName: rank.name }
+  roleCategoryMap[rank.roleId] = rank.name
 }
 
-// Prioridade de exibição a partir de config.rankOrder
-const rolePriority = config.rankOrder.map(key => config.ranks[key].name)
+const orderedRanks = config.rankOrder.map(key => config.ranks[key])
 
-// Construir a hierarquia da guilda
-async function buildHierarchyMessage(guild) {
+async function buildHierarchyPayload(guild) {
   const localTime = DateTime.now()
     .setZone('America/Sao_Paulo')
     .toFormat('dd/MM/yyyy, HH:mm:ss')
-  const hierarchy = {}
-
-  for (const role of rolePriority) {
-    hierarchy[role] = []
-  }
-
-  let totalContingent = 0
 
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
@@ -76,131 +40,90 @@ async function buildHierarchyMessage(guild) {
         await new Promise(resolve => setTimeout(resolve, retryAfter * 1000))
       } else {
         console.error('Erro ao buscar membros da guilda após 3 tentativas:', error.message)
-        return ['Erro ao buscar membros da guilda.']
+        throw error
       }
     }
   }
 
+  const buckets = new Map(orderedRanks.map(r => [r.roleId, []]))
+  let totalContingent = 0
+
   guild.members.cache.forEach(member => {
-    for (const roleId of Object.keys(roleCategoryMap)) {
-      if (member.roles.cache.has(roleId)) {
-        const { category } = roleCategoryMap[roleId]
-
-        if (!hierarchy[category]) {
-          console.error(
-            `Categoria não encontrada: ${category} para o cargo ID: ${roleId}`,
-          )
-          continue
-        }
-
-        hierarchy[category].push(`<@${member.user.id}>`)
+    for (const rank of orderedRanks) {
+      if (member.roles.cache.has(rank.roleId)) {
+        buckets.get(rank.roleId).push(`<@${member.user.id}>`)
         totalContingent++
         break
       }
     }
   })
 
-  let hierarchyMessage = `# **${config.branding.hierarchyTitle}**\n\n`
+  const embed = new EmbedBuilder()
+    .setTitle(`🏴‍☠️ ${config.branding.hierarchyTitle}`)
+    .setColor(config.branding.color)
+    .setFooter({ text: `${config.branding.footerText} • Atualizado em ${localTime}` })
 
-  rolePriority.forEach(role => {
-    const count = hierarchy[role].length || 0
-    hierarchyMessage += `# **${role}:** ${count ? `\`${count}\`` : '`0`'}\n`
-    hierarchyMessage +=
-      hierarchy[role].length > 0
-        ? hierarchy[role].join('\n') + '\n\n'
-        : 'Sem ocupantes.\n\n'
+  const files = []
+  const bannerPath = path.resolve(config.branding.bannerPath)
+  const logoPath = path.resolve(config.branding.logoPath)
+  if (fs.existsSync(bannerPath)) {
+    files.push(new AttachmentBuilder(bannerPath, { name: 'banner.png' }))
+    embed.setImage('attachment://banner.png')
+  }
+  if (fs.existsSync(logoPath)) {
+    files.push(new AttachmentBuilder(logoPath, { name: 'logo.png' }))
+    embed.setThumbnail('attachment://logo.png')
+  }
+
+  for (const rank of orderedRanks) {
+    const occupants = buckets.get(rank.roleId)
+    const value = occupants.length > 0 ? occupants.join('\n') : '*Sem ocupantes.*'
+    embed.addFields({
+      name: `${rank.name} \`${occupants.length}\``,
+      value: value.length > 1024 ? value.slice(0, 1020) + '...' : value,
+      inline: false,
+    })
+  }
+
+  embed.addFields({
+    name: '​',
+    value: `**Total de contingente: \`${totalContingent}\`**`,
+    inline: false,
   })
 
-  hierarchyMessage += `# **Total de contingente: \`${totalContingent}\`**\n`
-  hierarchyMessage += `\n\n*Atualizado em ${localTime}*`
-
-  return splitMessage(hierarchyMessage)
+  return { embeds: [embed], files }
 }
 
-// Atualizar a hierarquia no canal
 async function updateHierarchy(guild, channelId) {
   const channel = guild.channels.cache.get(channelId)
   if (!channel) {
-    console.log('Canal não encontrado.')
+    console.log('Canal de hierarquia não encontrado.')
     return
   }
 
   try {
-    const messageParts = await buildHierarchyMessage(guild)
-    let storedMessageIds = await loadMessageIds()
-    let storedMessages = []
+    const payload = await buildHierarchyPayload(guild)
+    const storedId = await loadMessageId()
 
-    for (const messageId of storedMessageIds) {
+    if (storedId) {
       try {
-        const message = await channel.messages.fetch(messageId)
-        storedMessages.push(message)
-      } catch (error) {
-        console.log(`Mensagem ${messageId} não encontrada. Será recriada.`)
+        const existing = await channel.messages.fetch(storedId)
+        await existing.edit(payload)
+        console.log('Hierarquia atualizada (edit).')
+        return
+      } catch (err) {
+        console.log(`Mensagem ${storedId} não encontrada — recriando.`)
       }
     }
 
-    const quantidadeMudou = storedMessages.length !== messageParts.length
-
-    if (quantidadeMudou) {
-      console.log(
-        'Quantidade de mensagens mudou. Deletando todas e recriando...',
-      )
-
-      for (const msg of storedMessages) {
-        try {
-          await msg.delete()
-        } catch (error) {
-          console.error(`Erro ao deletar mensagem ${msg.id}:`, error)
-        }
-      }
-
-      const newMessageIds = []
-      for (const part of messageParts) {
-        const newMessage = await channel.send(part)
-        newMessageIds.push(newMessage.id)
-      }
-
-      await saveMessageIds(newMessageIds)
-      console.log('Hierarquia recriada com sucesso.')
-      return
-    }
-
-    if (storedMessages.length > messageParts.length) {
-      for (let i = messageParts.length; i < storedMessages.length; i++) {
-        try {
-          await storedMessages[i].delete()
-        } catch (error) {
-          console.error(
-            `Erro ao deletar mensagem ${storedMessages[i].id}:`,
-            error,
-          )
-        }
-      }
-      storedMessages = storedMessages.slice(0, messageParts.length)
-    }
-
-    let newMessageIds = []
-
-    for (let i = 0; i < messageParts.length; i++) {
-      if (storedMessages[i]) {
-        if (storedMessages[i].content !== messageParts[i]) {
-          await storedMessages[i].edit(messageParts[i])
-        }
-        newMessageIds.push(storedMessages[i].id)
-      } else {
-        const newMessage = await channel.send(messageParts[i])
-        newMessageIds.push(newMessage.id)
-      }
-    }
-
-    await saveMessageIds(newMessageIds)
-    console.log('Hierarquia atualizada.')
+    const sent = await channel.send(payload)
+    await saveMessageId(sent.id)
+    console.log('Hierarquia criada (nova mensagem).')
   } catch (error) {
     console.error('Erro ao atualizar hierarquia:', error)
   }
 }
 
-// Debounce para eventos em rajada (promoção em lote, etc.)
 let debounceTimer = null
 let pendingGuild = null
 function scheduleHierarchyUpdate(guild) {
@@ -217,12 +140,7 @@ function scheduleHierarchyUpdate(guild) {
   }, 3000)
 }
 
-const roleCategoryMapForIds = {}
-for (const key of config.rankOrder) {
-  const rank = config.ranks[key]
-  roleCategoryMapForIds[rank.roleId] = rank.name
-}
-const hierarchyRoleIds = new Set(Object.keys(roleCategoryMapForIds))
+const hierarchyRoleIds = new Set(Object.keys(roleCategoryMap))
 
 module.exports = {
   updateHierarchy,

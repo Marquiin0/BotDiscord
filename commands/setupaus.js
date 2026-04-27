@@ -33,9 +33,14 @@ module.exports = {
     }
 
     const embed = new EmbedBuilder()
-      .setTitle('🌴 Solicitação de Ausência')
-      .setDescription('📅 Selecione a quantidade de dias de ausência.')
-      .setColor('#FF0000')
+      .setTitle(`🌴 ${config.branding.name} — Solicitação de Ausência`)
+      .setDescription(
+        '📅 Selecione abaixo quantos dias você precisará ficar afastado.\n\n' +
+        'Após escolher, será aberto um modal para você informar o **motivo**.\n' +
+        'Use o botão **Sair de Ausência** para cancelar uma ausência ativa.'
+      )
+      .setColor(config.branding.color)
+      .setFooter({ text: config.branding.footerText })
     const banner = attachImage(path.join(__dirname, '..', config.branding.bannerPath))
     embed.setImage(banner.url)
 
@@ -327,8 +332,9 @@ module.exports = {
 
       // Cria o embed para registrar a ausência (status Ativo)
       const absenceEmbed = new EmbedBuilder()
-        .setTitle('🌴 Ausência Registrada')
-        .setColor('#00FF00') // Verde para "Ativo"
+        .setTitle(`🌴 ${config.branding.name} — Ausência Registrada`)
+        .setColor(config.branding.color)
+        .setDescription(`O membro <@${interaction.user.id}> está oficialmente em ausência.`)
         .addFields(
           {
             name: '👤 QRA',
@@ -341,6 +347,11 @@ module.exports = {
             inline: true,
           },
           {
+            name: '⏱️ Duração',
+            value: `${diasAusencia} dia(s)`,
+            inline: true,
+          },
+          {
             name: '📝 Motivo',
             value: motivo || 'Não especificado',
             inline: false,
@@ -348,7 +359,7 @@ module.exports = {
         )
         .setThumbnail(interaction.user.displayAvatarURL({ dynamic: true }))
         .setFooter({
-          text: 'Status: Ativo',
+          text: `${config.branding.footerText} • Status: Ativo`,
           iconURL: 'https://cdn-icons-png.flaticon.com/512/845/845646.png',
         })
         .setTimestamp()
@@ -421,7 +432,7 @@ module.exports = {
               const updatedEmbed = EmbedBuilder.from(msg.embeds[0])
                 .setColor('#FF0000') // Vermelho para "Inativo"
                 .setFooter({
-                  text: 'Status: Inativo • Expirado',
+                  text: `${config.branding.footerText} • Status: Inativo • Expirado`,
                   iconURL:
                     'https://cdn-icons-png.flaticon.com/512/845/845646.png',
                 })

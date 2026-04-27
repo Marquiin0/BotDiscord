@@ -14,11 +14,12 @@ const { MessageFlags } = require('discord.js')
 
 const APOSENTADORIA_CANAL = config.channels.pedidos // Canal de aposentadorias aprovadas e revisões
 const CARGO_APOSENTADO = config.roles.aposentado // Cargo de aposentado
+// Cargos que **não** podem solicitar aposentadoria — referencia patentes
+// dinamicamente para tolerar quaisquer ranks definidos no config.
 const CARGOS_MINIMOS = [
-  // Cargos que **não** podem solicitar aposentadoria
-  config.ranks.EST.roleId, // EST
-  config.ranks.SD.roleId,  // SD
-]
+  config.ranks.SHADOW?.roleId,
+  config.ranks.EXECUTOR?.roleId,
+].filter(Boolean)
 
 module.exports = {
   name: Events.InteractionCreate,

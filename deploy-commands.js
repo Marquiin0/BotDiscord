@@ -25,19 +25,21 @@ const guildIds = [
 ];
 
 (async () => {
-    try {
-        console.log('Started refreshing application (/) commands.');
+    console.log('Started refreshing application (/) commands.');
 
-        for (const guildId of guildIds) {
+    for (const guildId of guildIds) {
+        if (!guildId) continue;
+        try {
             await rest.put(
                 Routes.applicationGuildCommands(process.env.CLIENT_ID, guildId),
                 { body: commands },
             );
-            console.log(`Commands registered in guild: ${guildId}`);
+            console.log(`✅ Commands registered in guild: ${guildId}`);
+        } catch (error) {
+            // Bot pode não estar mais em guilds de batalhão — não aborta o resto
+            console.warn(`⚠️  Skipping guild ${guildId}: ${error.code === 50001 ? 'Missing Access' : error.message}`);
         }
-
-        console.log('Successfully reloaded application (/) commands in all guilds.');
-    } catch (error) {
-        console.error(error);
     }
+
+    console.log('Done.');
 })();

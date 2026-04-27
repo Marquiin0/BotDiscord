@@ -53,7 +53,7 @@ async function handleSolicitarSetagem(interaction, client) {
   try {
     const roupaEmbed = new EmbedBuilder()
       .setColor(config.branding.color)
-      .setTitle('👔 Fardamento de Estagiário — Genesis Police')
+      .setTitle(`👔 Fardamento de Estagiário — ${config.branding.name}`)
       .setDescription(
         'Antes de continuar com a setagem, vista o **fardamento correto** no seu personagem!\n\n' +
         'No **Passo 4** do formulário você precisará enviar um **print** do seu personagem usando a roupa abaixo.\n\n' +
@@ -123,7 +123,7 @@ async function handleSolicitarSetagem(interaction, client) {
     if (!dmEnviada) {
       const roupaFallback = new EmbedBuilder()
         .setColor(config.branding.color)
-        .setTitle('👔 Fardamento de Estagiário — Genesis Police')
+        .setTitle(`👔 Fardamento de Estagiário — ${config.branding.name}`)
         .setDescription(
           '⚠️ **Não conseguimos enviar no seu privado.** Confira o fardamento aqui!\n\n' +
           'No **Passo 4** você precisará enviar um **print** do seu personagem usando a roupa abaixo.',
@@ -325,13 +325,13 @@ async function handleAceitarSetagem(interaction) {
     })
   }
 
-  // Muda nickname para [EST] NOME | ID
-  const newNickname = `[EST] ${nome} | ${id}`
+  // Muda nickname para [SHADOW] NOME | ID
+  const newNickname = `[SHADOW] ${nome} | ${id}`
   await member.setNickname(newNickname).catch(console.error)
 
-  // Adiciona cargos
-  await member.roles.add(config.roles.recruta).catch(console.error)
+  // Adiciona cargos: cargo MerryWeather (membro) + SHADOW (cargo inicial / estagiário)
   await member.roles.add(config.roles.membro).catch(console.error)
+  await member.roles.add(config.roles.shadow).catch(console.error)
 
   // Cadastra no BD
   await MemberID.upsert({

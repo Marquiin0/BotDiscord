@@ -18,6 +18,10 @@ module.exports = {
     if (interaction.deferred || interaction.replied) return
     // ==================== BOTÕES DA CORREGEDORIA ====================
     if (interaction.isButton()) {
+      // ADV Verbal
+      if (interaction.customId.startsWith('corr_advv_')) {
+        return handleAdvModal(interaction, 'verbal')
+      }
       // ADV 1
       if (interaction.customId.startsWith('corr_adv1_')) {
         return handleAdvModal(interaction, 1)
@@ -88,12 +92,21 @@ module.exports = {
 
 // ==================== ADV HANDLERS ====================
 
+// Mapping centralizado de tipo -> roleId / dias / cor / label
+const ADV_CONFIG = {
+  verbal: { roleId: () => config.roles.advVerbal, days: 5,  color: '#FFD700', label: 'Verbal' },
+  1:      { roleId: () => config.roles.adv1,      days: 10, color: '#FFA500', label: '1' },
+  2:      { roleId: () => config.roles.adv2,      days: 15, color: '#FF4500', label: '2' },
+}
+
 async function handleAdvModal(interaction, advLevel) {
   const targetId = interaction.customId.split('_').pop()
+  const meta = ADV_CONFIG[advLevel]
+  if (!meta) return
 
   const modal = new ModalBuilder()
     .setCustomId(`modal_adv_${advLevel}_${targetId}`)
-    .setTitle(`Advertência ${advLevel}`)
+    .setTitle(`Advertência ${meta.label}`)
 
   const motivoInput = new TextInputBuilder()
     .setCustomId('adv_motivo')
@@ -112,15 +125,19 @@ async function handleAdvSubmit(interaction) {
   if (interaction.deferred || interaction.replied) return
   if (processedAdvInteractions.has(interaction.id)) return
   processedAdvInteractions.add(interaction.id)
-  // Limpa IDs antigos após 30s
   setTimeout(() => processedAdvInteractions.delete(interaction.id), 30000)
 
-  console.log(`[DEBUG] handleAdvSubmit chamado - interactionId: ${interaction.id}, customId: ${interaction.customId}`)
-
   const parts = interaction.customId.split('_')
-  const advLevel = parseInt(parts[2])
+  // customId: modal_adv_<level>_<targetId>  — level pode ser 'verbal' | '1' | '2'
+  const rawLevel = parts[2]
+  const advLevel = rawLevel === 'verbal' ? 'verbal' : parseInt(rawLevel)
   const targetId = parts[3]
   const motivo = interaction.fields.getTextInputValue('adv_motivo')
+
+  const meta = ADV_CONFIG[advLevel]
+  if (!meta) {
+    return interaction.reply({ content: '❌ Tipo de ADV inválido.', flags: MessageFlags.Ephemeral })
+  }
 
   await interaction.deferReply({ flags: MessageFlags.Ephemeral })
 
@@ -130,13 +147,11 @@ async function handleAdvSubmit(interaction) {
     return interaction.editReply({ content: '❌ Membro não encontrado.' })
   }
 
-  const roleId = advLevel === 1 ? config.roles.adv1 : config.roles.adv2
-  const duration = advLevel === 1 ? 15 : 7
+  const roleId = meta.roleId()
+  const duration = meta.days
 
-  // Adiciona cargo de ADV
   await member.roles.add(roleId).catch(console.error)
 
-  // Salva no BD
   const expirationDate = new Date()
   expirationDate.setDate(expirationDate.getDate() + duration)
 
@@ -148,12 +163,11 @@ async function handleAdvSubmit(interaction) {
     appliedBy: interaction.user.id,
   })
 
-  // Embed de log no canal de punições
   const logChannel = guild.channels.cache.get(config.channels.exoneracaoLog)
   if (logChannel) {
     const logEmbed = new EmbedBuilder()
-      .setColor(advLevel === 1 ? '#FFA500' : '#FF4500')
-      .setTitle(`⚠️ ${config.branding.name} - Advertência ${advLevel}`)
+      .setColor(meta.color)
+      .setTitle(`⚠️ ${config.branding.name} - Advertência ${meta.label}`)
       .addFields(
         { name: '👤 Membro', value: `<@${targetId}>`, inline: true },
         { name: '📝 Motivo', value: motivo, inline: false },
@@ -171,11 +185,10 @@ async function handleAdvSubmit(interaction) {
         .setStyle(ButtonStyle.Secondary),
     )
 
-    console.log(`[DEBUG-CORR] Enviando ADV para canal principal (exoneracaoLog): ${config.channels.exoneracaoLog}`)
     await logChannel.send({ embeds: [logEmbed], components: [removeButton] })
   }
 
-  // Enviar log para o servidor de logs
+  // Log no servidor de logs (se configurado)
   try {
     const logsGuild = interaction.client.guilds.cache.get(config.guilds.logs)
     if (logsGuild) {
@@ -183,8 +196,8 @@ async function handleAdvSubmit(interaction) {
         || await logsGuild.channels.fetch(config.logsChannels.corregedoria).catch(() => null)
       if (logsChannel) {
         const logsEmbed = new EmbedBuilder()
-          .setColor(advLevel === 1 ? '#FFA500' : '#FF4500')
-          .setTitle(`⚠️ ${config.branding.name} - Advertência ${advLevel}`)
+          .setColor(meta.color)
+          .setTitle(`⚠️ ${config.branding.name} - Advertência ${meta.label}`)
           .addFields(
             { name: '👤 Membro', value: `<@${targetId}>`, inline: true },
             { name: '📝 Motivo', value: motivo, inline: false },
@@ -194,13 +207,8 @@ async function handleAdvSubmit(interaction) {
           )
           .setFooter({ text: config.branding.footerText })
           .setTimestamp()
-        console.log('[DEBUG-CORR] Enviando ADV log para servidor de logs')
         await logsChannel.send({ embeds: [logsEmbed] })
-      } else {
-        console.error('Canal de corregedoria não encontrado no servidor de logs:', config.logsChannels.corregedoria)
       }
-    } else {
-      console.error('Guild de logs não encontrada:', config.guilds.logs)
     }
   } catch (err) {
     console.error('Erro ao enviar log de advertência para servidor de logs:', err)
@@ -209,10 +217,10 @@ async function handleAdvSubmit(interaction) {
   // DM para a pessoa
   try {
     const dmEmbed = new EmbedBuilder()
-      .setColor('#FF4500')
-      .setTitle(`⚠️ ${config.branding.name} - Advertência ${advLevel}`)
+      .setColor(meta.color)
+      .setTitle(`⚠️ ${config.branding.name} - Advertência ${meta.label}`)
       .setDescription(
-        `Você recebeu uma **Advertência ${advLevel}** por:\n\n` +
+        `Você recebeu uma **Advertência ${meta.label}** por:\n\n` +
         `> ${motivo}\n\n` +
         `Duração: **${duration} dias**\n` +
         `Aplicado por: <@${interaction.user.id}>`,
@@ -231,7 +239,7 @@ async function handleAdvSubmit(interaction) {
   } catch (e) { /* DM fechada */ }
 
   await interaction.editReply({
-    content: `✅ ADV ${advLevel} aplicada em <@${targetId}> por ${duration} dias.`,
+    content: `✅ ADV ${meta.label} aplicada em <@${targetId}> por ${duration} dias.`,
   })
 }
 
