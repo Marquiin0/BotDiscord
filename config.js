@@ -28,6 +28,8 @@ module.exports = {
         setagem: '1474523278373556256',              // Embed "Solicitar Set"
         setagemAprovacao: '1483599311068463205',     // Embeds de aprovação (Aceitar/Recusar)
         painelInfo: '1498155089700061274',           // Painel "Minhas Informações"
+        pedidos: '1498355322757185607',              // Pedidos de promoção/exoneração/aposentadoria
+        identificacaoLog: '1498355912484720680',     // Embeds de identificação aceitas
 
         // === Legados Genesis Police (comandos antigos dormentes) ===
         loja: '1477408729313054775',
@@ -38,10 +40,8 @@ module.exports = {
         apreensaoLog: '1478762123835346954',
         prisaoEmbed: '1481839335870431252',
         prisaoLog: '1478762158027444285',
-        pedidos: '1477408729103335440',
         promocaoLog: '1477408729103335438',
         relatorioPatrulha: '1477408728679714896',
-        identificacaoLog: '1477408729103335444',
         identificacaoResumo: '1477408728679714904',
         cursoComprovantes: '1482106954640920636',
         cursoAprovados: '1482106851871948821',
@@ -81,9 +81,10 @@ module.exports = {
 
     // ==================== CATEGORIAS ====================
     categories: {
-        acoes: '1477408729728155705',        // Categoria relatórios de ações + setagem
-        cursoQuiz: '1477408729509920851',    // Categoria para quizzes do curso MAA
-        tickets: '1477408728884969654',      // Categoria para tickets
+        identificacao: '1474523280470708328', // Categoria onde os canais temporários de identificação são criados (MerryWeather)
+        acoes: '1477408729728155705',        // Categoria relatórios de ações + setagem (legado)
+        cursoQuiz: '1477408729509920851',    // Categoria para quizzes do curso MAA (legado)
+        tickets: '1477408728884969654',      // Categoria para tickets (legado)
         ticketsLogs: '1494500619334193212', // Categoria para tickets do server de logs / canais privados REC
         recPrivado: '1494500619334193212',  // Alias para ticketsLogs (canais /registrar-rec)
     },
@@ -158,10 +159,10 @@ module.exports = {
         advVerbal: '1474523272937869375',        // ADV Verbal (5 dias)
         adv1: '1474523272732344399',             // ADV 1 (10 dias)
         adv2: '1474523272732344398',             // ADV 2 (15 dias)
+        identificado: '1498356286935273594',     // Identificado (Merry)
+        naoIdentificado: '1498356274344235098',  // Não identificado (Merry)
 
         // === Legados Genesis (mantidos para comandos antigos não quebrarem) ===
-        identificado: '1477408727052193977',
-        naoIdentificado: '1477408727052193976',
         aposentado: '1477408727236874241',
         maaAprovado: '1477408727119298809',
         rh: '1477408727270166607',

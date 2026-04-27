@@ -180,8 +180,6 @@ async function showUserInfo(interaction, targetUserId, ephemeral = true) {
       }
     }
 
-    const totalRelatorios = actionCount + prisonCount + apreensaoCount
-
     const embed = new EmbedBuilder()
       .setColor(config.branding.color)
       .setTitle(`📊 Informações de ${member.displayName}`)
@@ -193,75 +191,7 @@ async function showUserInfo(interaction, targetUserId, ephemeral = true) {
         { name: '📅 Data de Entrada', value: joinDate, inline: true },
         { name: '📈 Último Up', value: lastPromotion, inline: true },
         { name: '⏰ Horas Semanais', value: `${totalHours}h`, inline: true },
-        {
-          name: '📋 Relatórios',
-          value: `Total: **${totalRelatorios}**\nAções (cmd): **${actionCount}**\nAções (part): **${actionParticipations}**\nPrisões: **${prisonCount}**\nApreensões: **${apreensaoCount}**`,
-          inline: true,
-        },
-        {
-          name: '📚 Curso MAA',
-          value: hasCursoMAA ? '✅ Aprovado' : '❌ Não possui',
-          inline: true,
-        },
-        {
-          name: '🏅 Medalhas',
-          value: medals.length > 0 ? medals.join('\n') : 'Nenhuma',
-          inline: true,
-        },
       )
-
-    // ═══════════ PROGRESSO DE PROMOÇÃO ═══════════
-    const reqs = currentRankKey ? config.promotionRequirements[currentRankKey] : null
-    if (reqs) {
-      const totalAcaoApreensao = actionCount + actionParticipations + apreensaoCount + apreensaoParticipations
-      const totalPrisao = prisonCount + prisonParticipations
-      const diasNoCargo = Math.floor((Date.now() - lastPromotionDate.getTime()) / (1000 * 60 * 60 * 24))
-
-      if (reqs.indicacao) {
-        // MAJ e TCOR - indicação
-        const diasReq = Math.max(reqs.dias - dayReduction, 0)
-        const diasOk = diasNoCargo >= diasReq ? '✅' : '❌'
-        const reducaoText = dayReduction > 0 ? ` (-${dayReduction} loja)` : ''
-        embed.addFields({
-          name: `📊 Progresso para ${reqs.label.split(' → ')[1]}`,
-          value: `🏛️ Indicação do Alto Comando\n📅 Dias: **${diasNoCargo}/${diasReq}** ${diasOk}${reducaoText}`,
-          inline: false,
-        })
-      } else {
-        const diasReq = Math.max(reqs.dias - dayReduction, 0)
-        const reducaoText = dayReduction > 0 ? ` (-${dayReduction} loja)` : ''
-
-        const acaoOk = totalAcaoApreensao >= reqs.apreensaoAcao ? '✅' : '❌'
-        const prisaoOk = totalPrisao >= reqs.prisao ? '✅' : '❌'
-        const diasOk = diasNoCargo >= diasReq ? '✅' : '❌'
-
-        const lines = []
-        if (reqs.cursoMAA) {
-          lines.push(`📋 Curso MAA: ${hasCursoMAA ? '✅' : '❌'}`)
-        }
-        lines.push(`🔫 Ações/Apreensões: **${totalAcaoApreensao}/${reqs.apreensaoAcao}** ${acaoOk}`)
-        lines.push(`🚔 Prisões: **${totalPrisao}/${reqs.prisao}** ${prisaoOk}`)
-        if (reqs.horasPatrulha > 0) {
-          const horasOk = accumulatedHours >= reqs.horasPatrulha ? '✅' : '❌'
-          lines.push(`⏰ Horas: **${accumulatedHours.toFixed(1)}/${reqs.horasPatrulha}h** ${horasOk}`)
-        }
-        if (reqs.cursosAcao > 0) {
-          const cursosOk = actionCourseCount >= reqs.cursosAcao ? '✅' : '❌'
-          lines.push(`🎓 Cursos Ação: **${actionCourseCount}/${reqs.cursosAcao}** ${cursosOk}`)
-        }
-        if (reqs.semAdvertencia) {
-          const advOk = warningCount === 0 ? '✅' : '❌'
-          lines.push(`⚠️ Advertências: **${warningCount}** ${advOk}`)
-        }
-        lines.push(`📅 Dias: **${diasNoCargo}/${diasReq}** ${diasOk}${reducaoText}`)
-
-        embed.addFields({
-          name: `📊 Progresso para ${reqs.label.split(' → ')[1]}`,
-          value: lines.join('\n'),
-          inline: false,
-        })
-      }
-    }
 
     embed.setFooter({ text: config.branding.footerText })
       .setTimestamp()

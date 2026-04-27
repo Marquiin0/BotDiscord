@@ -130,7 +130,7 @@ module.exports = {
       try {
         channel = await interaction.guild.channels.create({
           name: `identificacao-${displayName}`,
-          parent: config.categories.tickets, // ID da categoria
+          parent: config.categories.identificacao, // ID da categoria de identificação (MerryWeather)
           type: 0, // texto
           permissionOverwrites: [
             {
