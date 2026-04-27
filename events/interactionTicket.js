@@ -44,10 +44,11 @@ function downloadAttachment(url, dest) {
 }
 
 // Todas as categorias de ticket usam a mesma categoria
-const ticketCategoryId = config.categories.tickets
+const ticketCategoryId = config.categories.ticketsAbertos
 
-// Quem pode usar botões de ticket (assumir, finalizar, adicionar, remover, poke)
-const staffRoles = config.permissions.rhPlus
+// Quem pode usar botões de ticket (assumir, finalizar, adicionar, remover, poke):
+// Corregedor + Sub Commander + Commander
+const staffRoles = config.permissions.corregedoria
 
 const typeMap = {
   corregedoria: 'crg',
@@ -107,18 +108,18 @@ function getCategoryIdForTipo() {
 }
 
 function getExtraRolesForTipo(sigla) {
-  // Dúvidas: RH+ (R.H, I.A, S.C, H.C, SCMD, CMD)
-  if (sigla === 'duv') return config.permissions.rhPlus
-  // Corregedoria: I.A+ (I.A, S.C, H.C, SCMD, CMD)
-  if (sigla === 'crg') return config.permissions.iaPlus
-  // Alto Comando: HC+ (H.C, SCMD, CMD)
-  if (sigla === 'alt') return config.permissions.hcPlus
-  // Recrutamento: FTO/RECS + RH+
-  if (sigla === 'rec') return [...config.permissions.ftoRecs, ...config.permissions.rhPlus]
-  // Donater: SCMD + CMD apenas
-  if (sigla === 'dnt') return [config.ranks.SCMD.roleId, config.ranks.CMD.roleId]
-  // Item Misterioso: SCMD + CMD apenas
-  if (sigla === 'mst') return [config.ranks.SCMD.roleId, config.ranks.CMD.roleId]
+  // Corregedoria: Corregedor + SCMD + CMD
+  if (sigla === 'crg') return config.permissions.corregedoria
+  // Alto Comando: SCMD + CMD apenas
+  if (sigla === 'alt') return config.permissions.staffMerry
+  // Dúvidas: Corregedor + SCMD + CMD
+  if (sigla === 'duv') return config.permissions.corregedoria
+  // Recrutamento (legado): FTO/RECS + Corregedoria
+  if (sigla === 'rec') return [...config.permissions.ftoRecs, ...config.permissions.corregedoria]
+  // Donater (legado): SCMD + CMD
+  if (sigla === 'dnt') return config.permissions.staffMerry
+  // Item Misterioso (legado): SCMD + CMD
+  if (sigla === 'mst') return config.permissions.staffMerry
   return []
 }
 
@@ -257,13 +258,21 @@ module.exports = {
           ],
         })
       }
-      const ticketChannel = await interaction.guild.channels.create({
-        name: channelName,
-        type: 0,
-        parent: categoryId,
-        topic: `${userId}|`,
-        permissionOverwrites: overwrites,
-      })
+      let ticketChannel
+      try {
+        ticketChannel = await interaction.guild.channels.create({
+          name: channelName,
+          type: 0,
+          parent: categoryId,
+          topic: `${userId}|`,
+          permissionOverwrites: overwrites,
+        })
+      } catch (err) {
+        console.error('[Ticket] Falha ao criar canal:', err)
+        return interaction.editReply({
+          content: `❌ Erro ao criar o canal do ticket: ${err.message}\n\nVerifique se a categoria \`${categoryId}\` existe e o bot tem permissão de gerenciar canais nela.`,
+        })
+      }
       try {
         console.log('[Criar] Salvando no DB ticketIdentifier=', shortTicketName)
         await Ticket.create({

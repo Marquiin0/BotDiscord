@@ -82,6 +82,7 @@ module.exports = {
     // ==================== CATEGORIAS ====================
     categories: {
         identificacao: '1474523280470708328', // Categoria onde os canais temporários de identificação são criados (MerryWeather)
+        ticketsAbertos: '1498376707336310784', // Categoria onde tickets abertos são criados (MerryWeather)
         acoes: '1477408729728155705',        // Categoria relatórios de ações + setagem (legado)
         cursoQuiz: '1477408729509920851',    // Categoria para quizzes do curso MAA (legado)
         tickets: '1477408728884969654',      // Categoria para tickets (legado)
