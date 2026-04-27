@@ -7,7 +7,7 @@ module.exports = {
     // ==================== GUILDS ====================
     guilds: {
         main: '1474523272732344390',       // MerryWeather (servidor principal)
-        logs: '1477473906863505582',        // Servidor de logs (externo, mantido)
+        logs: '1474523272732344390',       // Logs centralizados na própria guild MerryWeather
         unidades: {
             sog: '1483574861866602756',    // SOG
             swat: '1481606531160997953',   // SWAT
@@ -53,30 +53,33 @@ module.exports = {
         blackUnidades: '1494770890058109030',
     },
 
-    // ==================== CANAIS (Servidor de Logs) ====================
+    // ==================== CANAIS DE LOGS (canal único centralizado na guild MerryWeather) ====================
+    // Todas as chaves apontam para o mesmo canal — todos os logs caem em #logs
+    // (1474835518880485396) dentro da própria guild MerryWeather. Para separar logs
+    // por categoria no futuro, basta apontar uma chave para outro ID.
     logsChannels: {
-        apreensao: '1477473908260208808',    // Log apreensões (source)
-        prisao: '1477473908260208809',       // Log prisões (source)
-        identificacao: '1477473908402946122', // Log identificação (aceita/negada)
-        ticket: '1477473908260208812',       // Log tickets (transcript + open/assume/close)
-        ponto: '1477473908260208804',        // Log ponto/horas (source toggle Genesis)
-        pontoMerryWeather: '1493298297073569902', // Log ponto/horas (source toggle MerryWeather)
-        horasPTR: '1477473908402946121',     // Log horas PTR (entrada/saída toggle)
-        loja: '1477473908402946125',         // Log compras da loja
-        rebaixamento: '1477473908402946129', // Log rebaixamentos
-        promocao: '1477473908402946129',    // Log promoções
-        corregedoria: '1477473908587233434', // Log advertências/exonerações
-        cursoMAA: '1481839491030454424',       // Log resultados curso MAA
-        ausencia: '1477473908402946126',     // Log ausências
-        aposentadoria: '1477473908402946123', // Log oficiais aposentados
-        pontos: '1477473908402946120',       // Log adição de pontos (/pontos)
-        envioPontos: '1477473908402946124',  // Log envio/transferência de pontos
-        registro: '1477473907563823116',     // Registro FTO (embed botão)
-        aceitarRegistro: '1477473907563823117', // Aceitar/recusar registros
-        ticketsLogs: '1477473907563823118',  // Tickets do server de logs
-        setUnidades: '1477473908826443830',  // Log de set de unidades
-        acao: '1477473908260208810',         // Log ações (source FiveM)
-        rec: '1477473907912212503',          // Canal de registro de REC (FTO)
+        apreensao:        '1474835518880485396',
+        prisao:           '1474835518880485396',
+        identificacao:    '1474835518880485396',
+        ticket:           '1474835518880485396',
+        ponto:            '1474835518880485396',
+        pontoMerryWeather:'1474835518880485396',
+        horasPTR:         '1474835518880485396',
+        loja:             '1474835518880485396',
+        rebaixamento:     '1474835518880485396',
+        promocao:         '1474835518880485396',
+        corregedoria:     '1474835518880485396',
+        cursoMAA:         '1474835518880485396',
+        ausencia:         '1474835518880485396',
+        aposentadoria:    '1474835518880485396',
+        pontos:           '1474835518880485396',
+        envioPontos:      '1474835518880485396',
+        registro:         '1474835518880485396',
+        aceitarRegistro:  '1474835518880485396',
+        ticketsLogs:      '1474835518880485396',
+        setUnidades:      '1474835518880485396',
+        acao:             '1474835518880485396',
+        rec:              '1474835518880485396',
     },
 
     // ==================== CATEGORIAS ====================
